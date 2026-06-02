@@ -1,0 +1,24 @@
+# Supabase CLI configuration.
+# Minimal config — the CLI fills unset fields with sensible defaults.
+# `supabase db push` (remote) only needs project_id + an active link; the
+# sections below mainly shape the local stack started by `supabase start`.
+project_id = "fundraiser-manager"
+
+[db]
+# Postgres major version used by the LOCAL dev stack (`supabase start`).
+# Supabase Cloud projects run PG15+, and the migrations target 15+, so this is safe.
+major_version = 15
+
+[api]
+enabled = true
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[studio]
+enabled = true
+
+[auth]
+enabled = true
+# Local-only redirect targets; Cloud projects configure these in the dashboard.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
