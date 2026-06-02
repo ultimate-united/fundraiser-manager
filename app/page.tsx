@@ -1,20 +1,52 @@
+import type { Metadata } from "next"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { HeroSection } from "@/components/home/hero-section"
-import { ImpactStats } from "@/components/home/impact-stats"
-import { EventsFeed } from "@/components/home/events-feed"
-import { ContributionSection } from "@/components/home/contribution-section"
+import { EventCard } from "@/components/events/event-card"
 import { mockEvents } from "@/lib/mock-data"
 
-export default function HomePage() {
+export const metadata: Metadata = {
+  title: 'Events | Ultimate United',
+  description: 'Browse upcoming charity events and fundraising opportunities. Join us in making a difference in Hong Kong communities.',
+}
+
+export default function EventsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <HeroSection />
-        <ImpactStats />
-        <EventsFeed events={mockEvents} />
-        <ContributionSection />
+        {/* Hero section */}
+        <section className="bg-secondary/30 py-16 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+                Upcoming Events
+              </h1>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Discover meaningful ways to contribute to our community through charity runs, 
+                celebrations, and educational programs.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Events grid */}
+        <section className="py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {mockEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+
+            {mockEvents.length === 0 && (
+              <div className="py-16 text-center">
+                <p className="text-lg text-muted-foreground">
+                  No events scheduled at the moment. Check back soon!
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

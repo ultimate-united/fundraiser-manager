@@ -171,7 +171,7 @@ export function EventsContent({ user }: EventsContentProps) {
           ))}
           <div className="text-center pt-2">
             <Button variant="outline" asChild>
-              <Link href="/events">
+              <Link href="/">
                 Browse More Events <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </Button>

@@ -260,7 +260,7 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
               </p>
             </div>
             <Button asChild>
-              <Link href="/events">
+              <Link href="/">
                 Explore Events
               </Link>
             </Button>

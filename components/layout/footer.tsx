@@ -2,18 +2,11 @@ import Link from "next/link"
 import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react"
 
 const footerLinks = {
-  organization: [
-    { name: "About Us", href: "/about" },
-    { name: "Our Mission", href: "/about#mission" },
-    { name: "Our Team", href: "/about#team" },
-  ],
   programs: [
-    { name: "Events", href: "/events" },
-    { name: "Women Empowerment", href: "/programs/women-empowerment" },
-    { name: "Friday Night Kids Club", href: "/programs/kids-club" },
+    { name: "Events", href: "/" },
   ],
   getInvolved: [
-    { name: "Donate", href: "/events" },
+    { name: "Donate", href: "/" },
     { name: "Volunteer", href: "/volunteer" },
     { name: "Partner With Us", href: "/partner" },
   ],
@@ -28,7 +21,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand & Contact */}
           <div className="space-y-4">
             <Link href="/" className="inline-block">
@@ -51,25 +44,6 @@ export function Footer() {
                 </a>
               </div>
             </div>
-          </div>
-
-          {/* Organization */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-              Organization
-            </h3>
-            <ul className="mt-4 space-y-2">
-              {footerLinks.organization.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Programs */}
