@@ -46,3 +46,4 @@ next-env.d.ts
 
 # Claude tools
 MEMORY
+.playwright-mcp/

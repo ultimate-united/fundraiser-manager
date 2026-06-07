@@ -1,15 +1,19 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { 
-  Calendar, 
-  Clock, 
-  Heart, 
-  TrendingUp, 
+import {
+  Calendar,
+  Clock,
+  Heart,
+  TrendingUp,
   Award,
   ChevronRight,
-  Star
+  Star,
+  Gift,
+  type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -26,53 +30,55 @@ interface UserData {
   hoursVolunteered: number
 }
 
-interface DashboardOverviewProps {
-  user: UserData
+/** A merged recent-activity row (registration or donation), serializable from the server. */
+export interface ActivityItem {
+  type: "event" | "donation"
+  title?: string
+  date?: string // ISO string
+  points?: number
+  amount?: number // HK$ (already converted from cents)
+  status?: string
 }
 
-// Mock data for recent activity
-const RECENT_ACTIVITY = [
-  { 
-    type: "event", 
-    title: "Beach Cleanup Drive", 
-    date: "May 15, 2026", 
-    points: 25,
-    status: "completed"
-  },
-  { 
-    type: "donation", 
-    title: "Monthly Contribution", 
-    date: "May 1, 2026", 
-    amount: 100,
-    status: "completed"
-  },
-  { 
-    type: "event", 
-    title: "Youth Mentorship Program", 
-    date: "May 28, 2026", 
-    points: 50,
-    status: "upcoming"
-  },
-]
+/** A redeemable reward, serializable from the server (icon is a lucide name). */
+export interface RewardItem {
+  id: string
+  name: string
+  description?: string
+  pointsRequired: number
+  icon?: string // lucide icon name
+  canRedeem: boolean
+}
 
-const AVAILABLE_REWARDS = [
-  { 
-    id: "1", 
-    name: "Community Champion Badge", 
-    pointsRequired: 300,
-    icon: Award,
-    description: "Awarded for attending 10+ events"
-  },
-  { 
-    id: "2", 
-    name: "Partner Store Discount", 
-    pointsRequired: 250,
-    icon: Star,
-    description: "10% off at participating local stores"
-  },
-]
+interface DashboardOverviewProps {
+  user: UserData
+  recentActivity: ActivityItem[]
+  availableRewards: RewardItem[]
+}
 
-export function DashboardOverview({ user }: DashboardOverviewProps) {
+// Map lucide icon NAME strings (from the API) to lucide components.
+const REWARD_ICONS: Record<string, LucideIcon> = {
+  Award,
+  Star,
+  Gift,
+  Heart,
+  Calendar,
+  TrendingUp,
+  Clock,
+}
+
+function resolveIcon(name?: string): LucideIcon {
+  return (name && REWARD_ICONS[name]) || Award
+}
+
+function formatDate(iso?: string): string {
+  if (!iso) return ""
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+}
+
+export function DashboardOverview({ user, recentActivity, availableRewards }: DashboardOverviewProps) {
   return (
     <div className="flex-1 space-y-6">
       {/* Welcome Header */}
@@ -159,36 +165,45 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {RECENT_ACTIVITY.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    activity.type === "event" ? "bg-primary/10" : "bg-destructive/10"
-                  }`}>
-                    {activity.type === "event" ? (
-                      <Calendar className={`w-4 h-4 ${
-                        activity.type === "event" ? "text-primary" : "text-destructive"
-                      }`} />
-                    ) : (
-                      <Heart className="w-4 h-4 text-destructive" />
-                    )}
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+            ) : (
+              recentActivity.map((activity, index) => {
+                const formattedDate = formatDate(activity.date)
+                return (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        activity.type === "event" ? "bg-primary/10" : "bg-destructive/10"
+                      }`}>
+                        {activity.type === "event" ? (
+                          <Calendar className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Heart className="w-4 h-4 text-destructive" />
+                        )}
+                      </div>
+                      <div>
+                        {activity.title && (
+                          <p className="font-medium text-sm">{activity.title}</p>
+                        )}
+                        {formattedDate && (
+                          <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {activity.status === "upcoming" ? (
+                        <Badge variant="outline">Upcoming</Badge>
+                      ) : activity.type === "event" && activity.points != null ? (
+                        <span className="text-sm font-semibold text-primary">+{activity.points} pts</span>
+                      ) : activity.type === "donation" && activity.amount != null ? (
+                        <span className="text-sm font-semibold">HK${activity.amount}</span>
+                      ) : null}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground">{activity.date}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  {activity.status === "upcoming" ? (
-                    <Badge variant="outline">Upcoming</Badge>
-                  ) : activity.points ? (
-                    <span className="text-sm font-semibold text-primary">+{activity.points} pts</span>
-                  ) : (
-                    <span className="text-sm font-semibold">HK${activity.amount}</span>
-                  )}
-                </div>
-              </div>
-            ))}
+                )
+              })
+            )}
           </CardContent>
         </Card>
 
@@ -208,19 +223,25 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {AVAILABLE_REWARDS.map((reward) => {
-              const canRedeem = user.totalPoints >= reward.pointsRequired
+            {availableRewards.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No rewards available yet.</p>
+            ) : (
+              availableRewards.map((reward) => {
+              const canRedeem = reward.canRedeem
               const progress = Math.min((user.totalPoints / reward.pointsRequired) * 100, 100)
-              
+              const RewardIcon = resolveIcon(reward.icon)
+
               return (
                 <div key={reward.id} className="p-4 rounded-lg border">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="p-2 rounded-lg bg-accent/20">
-                      <reward.icon className="w-5 h-5 text-accent-foreground" />
+                      <RewardIcon className="w-5 h-5 text-accent-foreground" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{reward.name}</p>
-                      <p className="text-xs text-muted-foreground">{reward.description}</p>
+                      {reward.description && (
+                        <p className="text-xs text-muted-foreground">{reward.description}</p>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -244,7 +265,8 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
                   </div>
                 </div>
               )
-            })}
+            })
+            )}
           </CardContent>
         </Card>
       </div>

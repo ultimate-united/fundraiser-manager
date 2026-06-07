@@ -1,10 +1,10 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Clock, MapPin, Users, ChevronRight } from "lucide-react"
+import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 interface UserData {
@@ -12,81 +12,30 @@ interface UserData {
   hoursVolunteered: number
 }
 
+export interface UpcomingEvent {
+  id: string
+  title: string
+  date: string
+  location: string
+  points: number
+}
+
+export interface PastEvent {
+  id: string
+  title: string
+  date: string
+  location: string
+  hoursLogged: number
+  pointsEarned: number
+}
+
 interface EventsContentProps {
   user: UserData
+  upcomingEvents: UpcomingEvent[]
+  pastEvents: PastEvent[]
 }
 
-const UPCOMING_EVENTS = [
-  {
-    id: "1",
-    title: "Youth Mentorship Program",
-    date: "2026-05-28",
-    time: "10:00 AM – 1:00 PM",
-    location: "Wan Chai Community Centre",
-    category: "Education",
-    spotsLeft: 4,
-    points: 50,
-  },
-  {
-    id: "2",
-    title: "Coastal Cleanup Drive",
-    date: "2026-06-07",
-    time: "8:00 AM – 12:00 PM",
-    location: "Repulse Bay Beach",
-    category: "Environment",
-    spotsLeft: 12,
-    points: 30,
-  },
-  {
-    id: "3",
-    title: "Food Bank Volunteer Day",
-    date: "2026-06-14",
-    time: "9:00 AM – 3:00 PM",
-    location: "Foodlink Foundation, Kwun Tong",
-    category: "Community",
-    spotsLeft: 2,
-    points: 60,
-  },
-]
-
-const PAST_EVENTS = [
-  {
-    id: "4",
-    title: "Beach Cleanup Drive",
-    date: "2026-05-15",
-    location: "Stanley Main Beach",
-    category: "Environment",
-    hoursLogged: 4,
-    pointsEarned: 25,
-  },
-  {
-    id: "5",
-    title: "Senior Centre Visit",
-    date: "2026-04-20",
-    location: "Shatin Elderly Services",
-    category: "Community",
-    hoursLogged: 3,
-    pointsEarned: 30,
-  },
-  {
-    id: "6",
-    title: "Charity Fun Run",
-    date: "2026-03-30",
-    location: "Victoria Park",
-    category: "Sports",
-    hoursLogged: 2,
-    pointsEarned: 20,
-  },
-]
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Education: "bg-blue-500/10 text-blue-600",
-  Environment: "bg-green-500/10 text-green-600",
-  Community: "bg-orange-500/10 text-orange-600",
-  Sports: "bg-purple-500/10 text-purple-600",
-}
-
-export function EventsContent({ user }: EventsContentProps) {
+export function EventsContent({ user, upcomingEvents, pastEvents }: EventsContentProps) {
   return (
     <div className="flex-1 space-y-6">
       <div>
@@ -128,36 +77,27 @@ export function EventsContent({ user }: EventsContentProps) {
 
       <Tabs defaultValue="upcoming" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upcoming">Upcoming ({UPCOMING_EVENTS.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({PAST_EVENTS.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-4">
-          {UPCOMING_EVENTS.map((event) => (
+          {upcomingEvents.map((event) => (
             <Card key={event.id}>
               <CardContent className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-serif font-semibold text-lg">{event.title}</h3>
-                      <Badge className={CATEGORY_COLORS[event.category]} variant="secondary">
-                        {event.category}
-                      </Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span>{event.date} · {event.time}</span>
+                        <span>{event.date}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 flex-shrink-0" />
-                        <span className={event.spotsLeft <= 3 ? "text-destructive font-medium" : ""}>
-                          {event.spotsLeft} spots left
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -179,16 +119,13 @@ export function EventsContent({ user }: EventsContentProps) {
         </TabsContent>
 
         <TabsContent value="past" className="space-y-4">
-          {PAST_EVENTS.map((event) => (
+          {pastEvents.map((event) => (
             <Card key={event.id}>
               <CardContent className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-serif font-semibold">{event.title}</h3>
-                      <Badge className={CATEGORY_COLORS[event.category]} variant="secondary">
-                        {event.category}
-                      </Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">

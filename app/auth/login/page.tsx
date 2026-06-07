@@ -86,23 +86,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* TODO: Remove dummy bypass once database schema is set up */}
-            <div className="mt-4 relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => router.push("/dashboard")}
-            >
-              Continue as Test User
-            </Button>
-
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">{"Don't have an account? "}</span>
               <Link href="/auth/sign-up" className="text-primary hover:underline font-medium">

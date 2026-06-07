@@ -9,25 +9,22 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { User, Bell, Shield, Trash2 } from "lucide-react"
-
-interface UserData {
-  id: string
-  email?: string
-  firstName: string
-  lastName: string
-  avatarUrl: string | null
-  tier: "bronze" | "silver" | "gold" | "platinum"
-}
+import type { UserData } from "@/lib/dashboard"
+import type { NotificationPrefsOut } from "@/lib/api/users/types"
 
 interface SettingsContentProps {
   user: UserData
+  /** Live profile values from GET /users/me. */
+  profile: { firstName: string; lastName: string }
+  /** Live preferences from GET /users/me/notifications. */
+  notifications: NotificationPrefsOut
 }
 
-export function SettingsContent({ user }: SettingsContentProps) {
-  const [emailNotifs, setEmailNotifs] = useState(true)
-  const [eventReminders, setEventReminders] = useState(true)
-  const [donationReceipts, setDonationReceipts] = useState(true)
-  const [newsletter, setNewsletter] = useState(false)
+export function SettingsContent({ user, profile, notifications }: SettingsContentProps) {
+  const [emailNotifs, setEmailNotifs] = useState(notifications.email_notifications)
+  const [eventReminders, setEventReminders] = useState(notifications.event_reminders)
+  const [donationReceipts, setDonationReceipts] = useState(notifications.donation_receipts)
+  const [newsletter, setNewsletter] = useState(notifications.newsletter)
 
   return (
     <div className="flex-1 space-y-6">
@@ -51,11 +48,11 @@ export function SettingsContent({ user }: SettingsContentProps) {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" defaultValue={user.firstName} />
+              <Input id="firstName" defaultValue={profile.firstName} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" defaultValue={user.lastName} />
+              <Input id="lastName" defaultValue={profile.lastName} />
             </div>
           </div>
           <div className="space-y-2">

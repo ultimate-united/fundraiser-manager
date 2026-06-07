@@ -12,72 +12,32 @@ interface UserData {
   totalPoints: number
 }
 
-interface DonationsContentProps {
-  user: UserData
+interface DonationHistoryItem {
+  id: string
+  campaign: string
+  date: string
+  amount: number
+  type: "one_time" | "recurring"
+  points: number
 }
 
-const DONATION_HISTORY = [
-  {
-    id: "1",
-    campaign: "Monthly Contribution",
-    date: "2026-05-01",
-    amount: 100,
-    type: "recurring",
-    status: "completed",
-    points: 10,
-  },
-  {
-    id: "2",
-    campaign: "Coastal Cleanup Fund",
-    date: "2026-04-18",
-    amount: 250,
-    type: "one-time",
-    status: "completed",
-    points: 25,
-  },
-  {
-    id: "3",
-    campaign: "Monthly Contribution",
-    date: "2026-04-01",
-    amount: 100,
-    type: "recurring",
-    status: "completed",
-    points: 10,
-  },
-  {
-    id: "4",
-    campaign: "Youth Education Drive",
-    date: "2026-03-10",
-    amount: 300,
-    type: "one-time",
-    status: "completed",
-    points: 30,
-  },
-  {
-    id: "5",
-    campaign: "Monthly Contribution",
-    date: "2026-03-01",
-    amount: 100,
-    type: "recurring",
-    status: "completed",
-    points: 10,
-  },
-]
+interface RecurringItem {
+  id: string
+  campaign: string
+  amount: number
+  frequency: string
+  nextDate: string
+  status: string
+}
 
-const RECURRING = [
-  {
-    id: "r1",
-    campaign: "Monthly Contribution",
-    amount: 100,
-    frequency: "Monthly",
-    nextDate: "2026-06-01",
-    status: "active",
-  },
-]
+interface DonationsContentProps {
+  user: UserData
+  history: DonationHistoryItem[]
+  recurring: RecurringItem[]
+}
 
-export function DonationsContent({ user }: DonationsContentProps) {
-  const totalThisYear = DONATION_HISTORY.reduce((sum, d) => sum + d.amount, 0)
-  const totalPointsFromDonations = DONATION_HISTORY.reduce((sum, d) => sum + d.points, 0)
+export function DonationsContent({ user, history, recurring }: DonationsContentProps) {
+  const totalThisYear = history.reduce((sum, d) => sum + d.amount, 0)
 
   return (
     <div className="flex-1 space-y-6">
@@ -123,7 +83,7 @@ export function DonationsContent({ user }: DonationsContentProps) {
                 <Repeat className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{RECURRING.length}</p>
+                <p className="text-2xl font-bold">{recurring.length}</p>
                 <p className="text-xs text-muted-foreground">Active Recurring</p>
               </div>
             </div>
@@ -141,10 +101,10 @@ export function DonationsContent({ user }: DonationsContentProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="font-serif text-xl">Donation History</CardTitle>
-              <CardDescription>{DONATION_HISTORY.length} donations</CardDescription>
+              <CardDescription>{history.length} donations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {DONATION_HISTORY.map((donation) => (
+              {history.map((donation) => (
                 <div
                   key={donation.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
@@ -182,7 +142,7 @@ export function DonationsContent({ user }: DonationsContentProps) {
         </TabsContent>
 
         <TabsContent value="recurring" className="space-y-4">
-          {RECURRING.map((item) => (
+          {recurring.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
