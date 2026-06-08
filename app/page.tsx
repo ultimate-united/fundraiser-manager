@@ -2,14 +2,16 @@ import type { Metadata } from "next"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { EventCard } from "@/components/events/event-card"
-import { mockEvents } from "@/lib/mock-data"
+import { getEventsView } from "@/lib/events"
 
 export const metadata: Metadata = {
   title: 'Events | Ultimate United',
   description: 'Browse upcoming charity events and fundraising opportunities. Join us in making a difference in Hong Kong communities.',
 }
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const events = await getEventsView()
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -33,12 +35,12 @@ export default function EventsPage() {
         <section className="py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {mockEvents.map((event) => (
+              {events.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
 
-            {mockEvents.length === 0 && (
+            {events.length === 0 && (
               <div className="py-16 text-center">
                 <p className="text-lg text-muted-foreground">
                   No events scheduled at the moment. Check back soon!

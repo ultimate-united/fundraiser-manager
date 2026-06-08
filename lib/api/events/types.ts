@@ -26,3 +26,17 @@ export interface EventListItem {
   participant_count: number
   spots_left: number | null
 }
+
+/** A dynamic content tab/section (mirrors app/schemas/events.py EventSectionOut). */
+export interface EventSection {
+  id: string
+  kind: "rich_text" | "schedule" | "sponsors" | "contribution" | "faq" | "organizer" | "custom"
+  title: string
+  position: number
+  content: unknown // JSONB — shape depends on `kind`
+}
+
+/** Full event detail (list fields + ordered dynamic sections). */
+export interface EventDetail extends EventListItem {
+  sections: EventSection[]
+}

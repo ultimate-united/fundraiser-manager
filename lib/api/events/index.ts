@@ -1,16 +1,16 @@
 import { apiFetch } from "@/lib/api/client"
 
-import { eventEndpoints } from "./endpoints"
-import type { EventListItem } from "./types"
+import { eventEndpoints, type EventListQuery } from "./endpoints"
+import type { EventDetail, EventListItem } from "./types"
 
-/** Public list of non-draft events (with computed aggregates). */
-export function getEvents() {
-  return apiFetch<EventListItem[]>(eventEndpoints.list)
+/** Public list of non-draft events (with computed aggregates), optionally filtered. */
+export function getEvents(params?: EventListQuery) {
+  return apiFetch<EventListItem[]>(eventEndpoints.list(params))
 }
 
-/** A single public event by slug. */
+/** A single public event by slug — includes ordered dynamic sections. */
 export function getEvent(slug: string) {
-  return apiFetch<EventListItem>(eventEndpoints.detail(slug))
+  return apiFetch<EventDetail>(eventEndpoints.detail(slug))
 }
 
-export type { EventListItem, EventStatus } from "./types"
+export type { EventDetail, EventListItem, EventSection, EventStatus } from "./types"

@@ -4,22 +4,16 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { EventHero } from "@/components/events/event-hero"
 import { EventTabs } from "@/components/events/event-tabs"
-import { getEventBySlug, mockEvents } from "@/lib/mock-data"
+import { getEventView } from "@/lib/events"
 
 interface EventPageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  return mockEvents.map((event) => ({
-    slug: event.slug,
-  }))
-}
-
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
   const { slug } = await params
-  const event = getEventBySlug(slug)
-  
+  const event = await getEventView(slug)
+
   if (!event) {
     return {
       title: 'Event Not Found',
@@ -40,7 +34,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 
 export default async function EventPage({ params }: EventPageProps) {
   const { slug } = await params
-  const event = getEventBySlug(slug)
+  const event = await getEventView(slug)
 
   if (!event) {
     notFound()
