@@ -46,4 +46,7 @@ next-env.d.ts
 
 # Claude tools
 MEMORY
+.agents
+.claude
+.windsurf
 .playwright-mcp/

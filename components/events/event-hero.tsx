@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Calendar, MapPin, Users, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -147,11 +148,11 @@ export function EventHero({ event }: EventHeroProps) {
                 </div>
 
                 <div className="mt-6 space-y-3">
-                  <Button className="w-full" size="lg">
-                    Donate Now
+                  <Button className="w-full" size="lg" asChild>
+                    <Link href={`/donate?event=${event.slug}`}>Donate Now</Link>
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    Register to Participate
+                  <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Link href={`/events/${event.slug}/register`}>Register to Participate</Link>
                   </Button>
                 </div>
 

@@ -1,7 +1,14 @@
 import { apiFetch } from "@/lib/api/client"
 
 import { donationEndpoints } from "./endpoints"
-import type { DonationOut, RecurringOut } from "./types"
+import type {
+  CheckoutSession,
+  DonationCreate,
+  DonationCreateResult,
+  DonationOut,
+  RecurringCreate,
+  RecurringOut,
+} from "./types"
 
 /** The current user's one-off + recorded donations. */
 export function getMyDonations() {
@@ -13,8 +20,44 @@ export function getMyRecurring() {
   return apiFetch<RecurringOut[]>(donationEndpoints.recurring)
 }
 
+/** Record a one-time donation (guest-friendly). Returns the pending record +
+ * Stripe handoff (client_secret is null until Stripe keys are configured). */
+export function createDonation(payload: DonationCreate) {
+  return apiFetch<DonationCreateResult>(donationEndpoints.create, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+/** Create a recurring-donation record directly (no Stripe). Requires auth. */
+export function createRecurring(payload: RecurringCreate) {
+  return apiFetch<RecurringOut>(donationEndpoints.recurring, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+/** Start a Stripe Checkout Session (subscription mode) for a recurring donation;
+ * returns the hosted Checkout URL to redirect to. Requires an authenticated user. */
+export function createRecurringCheckout(payload: RecurringCreate) {
+  return apiFetch<CheckoutSession>(donationEndpoints.recurringCheckout, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+/** Open the Stripe Customer Portal (manage / cancel subscriptions); returns the
+ * hosted portal URL. Requires an authenticated user with a stored Stripe customer. */
+export function createBillingPortalSession() {
+  return apiFetch<CheckoutSession>(donationEndpoints.billingPortal, { method: "POST" })
+}
+
 export type {
+  CheckoutSession,
+  DonationCreate,
+  DonationCreateResult,
   DonationOut,
+  RecurringCreate,
   RecurringOut,
   DonationKind,
   DonationStatus,

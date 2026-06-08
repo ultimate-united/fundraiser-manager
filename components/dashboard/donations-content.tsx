@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, TrendingUp, Calendar, ChevronRight, Repeat } from "lucide-react"
 import Link from "next/link"
+import { ManageSubscriptionButton } from "@/components/dashboard/manage-subscription-button"
 
 interface UserData {
   totalDonated: number
@@ -142,6 +143,17 @@ export function DonationsContent({ user, history, recurring }: DonationsContentP
         </TabsContent>
 
         <TabsContent value="recurring" className="space-y-4">
+          {recurring.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border bg-card p-4">
+              <div>
+                <p className="font-medium text-sm">Manage your recurring giving</p>
+                <p className="text-xs text-muted-foreground">
+                  Update your card, change the amount, or cancel — securely via Stripe.
+                </p>
+              </div>
+              <ManageSubscriptionButton />
+            </div>
+          )}
           {recurring.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-5">

@@ -13,3 +13,8 @@ export interface RegistrationOut {
   points_earned: number
   registered_at: string | null
 }
+
+/** Request body for POST /registrations/{eventId} (mirrors RegisterIn). */
+export interface RegisterIn {
+  role?: RegistrationRole
+}

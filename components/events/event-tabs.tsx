@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Clock, Heart, Lightbulb, Users, Building } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Event } from "@/lib/types"
@@ -164,8 +165,16 @@ function ContributeTab({ event }: { event: Event }) {
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {contribution.description}
               </p>
-              <Button className="mt-4 w-full" variant="outline">
-                {contribution.type === 'donation' ? 'Donate Now' : 'Sign Up'}
+              <Button className="mt-4 w-full" variant="outline" asChild>
+                <Link
+                  href={
+                    contribution.type === 'donation'
+                      ? `/donate?event=${event.slug}`
+                      : `/events/${event.slug}/register`
+                  }
+                >
+                  {contribution.type === 'donation' ? 'Donate Now' : 'Sign Up'}
+                </Link>
               </Button>
             </div>
           )
@@ -181,8 +190,8 @@ function ContributeTab({ event }: { event: Event }) {
           You can still make a difference by donating to this event. Every contribution, 
           no matter the size, helps us reach our goal.
         </p>
-        <Button size="lg" className="mt-6">
-          Make a Donation
+        <Button size="lg" className="mt-6" asChild>
+          <Link href={`/donate?event=${event.slug}`}>Make a Donation</Link>
         </Button>
       </div>
     </div>

@@ -2,9 +2,18 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { DonationForm } from "@/components/donate/donation-form"
 import { DonationImpact } from "@/components/donate/donation-impact"
+import { AlternativeDonationMethods } from "@/components/donate/alternative-donation-methods"
+import { getEventView } from "@/lib/events"
 import { Heart } from "lucide-react"
 
-export default function DonatePage() {
+interface DonatePageProps {
+  searchParams: Promise<{ event?: string }>
+}
+
+export default async function DonatePage({ searchParams }: DonatePageProps) {
+  const { event: eventSlug } = await searchParams
+  const event = eventSlug ? await getEventView(eventSlug) : null
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -16,11 +25,13 @@ export default function DonatePage() {
               <Heart className="w-8 h-8 text-primary" />
             </div>
             <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-              Make a Difference Today
+              {event ? `Support ${event.title}` : "Make a Difference Today"}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Your generous donation helps us continue our mission of promoting education 
-              and providing resources to underprivileged communities in Hong Kong.
+              {event
+                ? event.mission ||
+                  "Your generous donation directly supports this event and the community it serves."
+                : "Your generous donation helps us continue our mission of promoting education and providing resources to underprivileged communities in Hong Kong."}
             </p>
           </div>
         </section>
@@ -29,7 +40,10 @@ export default function DonatePage() {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
-              <DonationForm />
+              <div className="space-y-8">
+                <DonationForm eventId={event?.id ?? null} eventTitle={event?.title ?? null} />
+                <AlternativeDonationMethods eventTitle={event?.title ?? null} />
+              </div>
               <DonationImpact />
             </div>
           </div>

@@ -20,12 +20,19 @@ class Settings:
             for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
             if o.strip()
         ]
-        # Stripe is stubbed until keys/account are ready (Phase 2 follow-up).
+        # Stripe: secret key enables real PaymentIntents; webhook secret verifies
+        # incoming events (from `stripe listen` locally, or the dashboard in prod).
         self.stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+        self.stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
     @property
     def supabase_configured(self) -> bool:
         return bool(self.supabase_url and self.supabase_service_role_key)
+
+    @property
+    def frontend_base_url(self) -> str:
+        """First configured frontend origin — used for Stripe success/cancel URLs."""
+        return self.frontend_origins[0] if self.frontend_origins else "http://localhost:3000"
 
 
 @lru_cache

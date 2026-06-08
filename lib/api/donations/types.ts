@@ -36,3 +36,35 @@ export interface RecurringOut {
   stripe_subscription_id: string | null
   created_at: string | null
 }
+
+/** Request body for POST /donations (mirrors DonationCreate). */
+export interface DonationCreate {
+  amount: number // minor units (cents)
+  currency?: string
+  event_id?: string | null // null = general fund
+  donor_name?: string | null
+  donor_email?: string | null
+  message?: string | null
+  is_anonymous?: boolean
+  dedicated_to?: string | null
+}
+
+/** Response from POST /donations: the pending record + the Stripe handoff. */
+export interface DonationCreateResult {
+  donation: DonationOut
+  client_secret: string | null // null while payments.py is stubbed
+  payment_provider: string // "stub" until Stripe keys are added, then "stripe"
+}
+
+/** Request body for POST /donations/recurring (mirrors RecurringCreate). */
+export interface RecurringCreate {
+  amount: number // minor units (cents)
+  currency?: string
+  frequency?: RecurringFrequency
+  event_id?: string | null
+}
+
+/** A Stripe Checkout Session redirect URL (subscription mode). */
+export interface CheckoutSession {
+  url: string
+}

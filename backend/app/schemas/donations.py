@@ -53,6 +53,11 @@ class RecurringCreate(BaseModel):
     event_id: Optional[str] = None
 
 
+class CheckoutSessionOut(BaseModel):
+    """A Stripe Checkout Session redirect URL."""
+    url: str
+
+
 class RecurringUpdate(BaseModel):
     status: Optional[RecurringStatus] = None
     amount: Optional[int] = Field(default=None, gt=0)

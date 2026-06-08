@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { Suspense, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -10,12 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Only honor internal redirect targets to avoid open-redirects.
+  const redirectParam = searchParams.get("redirect")
+  const destination = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +36,7 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push("/dashboard")
+      router.push(destination)
       router.refresh()
     }
   }
@@ -97,5 +101,14 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  )
+}
+
+export default function LoginPage() {
+  // useSearchParams requires a Suspense boundary in the App Router.
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }

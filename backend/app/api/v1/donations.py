@@ -3,9 +3,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.auth import CurrentUser, get_current_user, get_optional_user
+from app.core.config import get_settings
 from app.db.helpers import changed_fields, single_row
 from app.db.supabase import get_service_client, get_user_client
 from app.schemas.donations import (
+    CheckoutSessionOut,
     DonationCreate,
     DonationCreateResult,
     DonationOut,
@@ -13,7 +15,12 @@ from app.schemas.donations import (
     RecurringOut,
     RecurringUpdate,
 )
-from app.services.payments import create_payment_intent
+from app.services.payments import (
+    create_billing_portal_session,
+    create_payment_intent,
+    create_subscription_checkout_session,
+    stripe_enabled,
+)
 
 router = APIRouter()
 
@@ -86,6 +93,64 @@ def create_recurring(payload: RecurringCreate, user: CurrentUser = Depends(get_c
     db = get_user_client(user.access_token)
     res = db.table("recurring_donations").insert(record).execute()
     return single_row(res, not_found="Failed to create recurring donation", status_code=500)
+
+
+@router.post("/recurring/checkout", response_model=CheckoutSessionOut)
+def create_recurring_checkout(payload: RecurringCreate, user: CurrentUser = Depends(get_current_user)):
+    """Start a Stripe Checkout Session (subscription mode) for a recurring donation.
+    The recurring_donations row + each charge are recorded by the Stripe webhook;
+    here we just hand back the URL to redirect the donor to."""
+    if not stripe_enabled():
+        raise HTTPException(status_code=503, detail="Stripe is not configured")
+
+    db = get_service_client()
+    customer_id = None
+    try:
+        prof = db.table("profiles").select("stripe_customer_id").eq("id", user.id).limit(1).execute()
+        if prof.data:
+            customer_id = prof.data[0].get("stripe_customer_id")
+    except Exception:
+        customer_id = None  # column may not exist yet (migration pending)
+
+    base = get_settings().frontend_base_url
+    url = create_subscription_checkout_session(
+        amount=payload.amount,
+        currency=payload.currency,
+        frequency=payload.frequency,
+        customer_id=customer_id,
+        customer_email=user.email,
+        metadata={"user_id": user.id, "event_id": payload.event_id or ""},
+        success_url=f"{base}/donate/success?recurring=1",
+        cancel_url=f"{base}/donate",
+    )
+    return {"url": url}
+
+
+@router.post("/billing-portal", response_model=CheckoutSessionOut)
+def open_billing_portal(user: CurrentUser = Depends(get_current_user)):
+    """Open the Stripe Customer Portal so the member can manage / cancel their
+    recurring donations. Requires a stored Stripe customer (set after their first
+    subscription)."""
+    if not stripe_enabled():
+        raise HTTPException(status_code=503, detail="Stripe is not configured")
+
+    db = get_service_client()
+    customer_id = None
+    try:
+        prof = db.table("profiles").select("stripe_customer_id").eq("id", user.id).limit(1).execute()
+        if prof.data:
+            customer_id = prof.data[0].get("stripe_customer_id")
+    except Exception:
+        customer_id = None  # column may not exist yet (migration pending)
+
+    if not customer_id:
+        raise HTTPException(status_code=404, detail="No subscription to manage yet")
+
+    url = create_billing_portal_session(
+        customer_id=customer_id,
+        return_url=f"{get_settings().frontend_base_url}/dashboard/donations",
+    )
+    return {"url": url}
 
 
 @router.get("/recurring", response_model=List[RecurringOut])
