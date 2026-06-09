@@ -1,0 +1,7 @@
+[build.environment]
+# These NEXT_PUBLIC_* values are inlined into the client bundle by design and
+# are safe to expose (Stripe publishable key, Supabase project URL + publishable
+# key, public API base URL). Netlify's secret scanner flags any env value it
+# finds in build output, so we explicitly tell it these are not secrets.
+# DO NOT add real secrets (Stripe sk_, Supabase service-role key) here.
+SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,NEXT_PUBLIC_API_URL"
