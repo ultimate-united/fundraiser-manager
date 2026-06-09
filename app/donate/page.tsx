@@ -3,7 +3,8 @@ import { Footer } from "@/components/layout/footer"
 import { DonationForm } from "@/components/donate/donation-form"
 import { DonationImpact } from "@/components/donate/donation-impact"
 import { AlternativeDonationMethods } from "@/components/donate/alternative-donation-methods"
-import { getEventView } from "@/lib/events"
+import { EventSelector } from "@/components/donate/event-selector"
+import { getEventView, getEventsView } from "@/lib/events"
 import { getRecentSupporters } from "@/lib/api/donations"
 import { createClient } from "@/lib/supabase/server"
 import { Heart } from "lucide-react"
@@ -16,6 +17,14 @@ export default async function DonatePage({ searchParams }: DonatePageProps) {
   const { event: eventSlug } = await searchParams
   const event = eventSlug ? await getEventView(eventSlug) : null
   const supporters = await getRecentSupporters(event?.id ?? null)
+
+  // Event picker options (general fund + active events). Ensure the current
+  // event is present even if it's not in the upcoming list.
+  const eventOptions = (await getEventsView()).map((e) => ({ slug: e.slug, title: e.title }))
+  if (event && !eventOptions.some((o) => o.slug === event.slug)) {
+    eventOptions.unshift({ slug: event.slug, title: event.title })
+  }
+  const currentSelection = event ? event.slug : "general"
 
   // Prefill donor details for logged-in users (donating is open to guests too).
   const supabase = await createClient()
@@ -54,6 +63,7 @@ export default async function DonatePage({ searchParams }: DonatePageProps) {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <div className="space-y-8">
+                <EventSelector options={eventOptions} current={currentSelection} />
                 <DonationForm
                   eventId={event?.id ?? null}
                   eventTitle={event?.title ?? null}

@@ -1,14 +1,16 @@
 import Link from "next/link"
-import { Calendar, MapPin, Users, Share2 } from "lucide-react"
+import { Calendar, MapPin, Users, Share2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import type { Event } from "@/lib/types"
 
 interface EventHeroProps {
   event: Event
+  /** True when the signed-in user already has an active registration. */
+  isRegistered?: boolean
 }
 
-export function EventHero({ event }: EventHeroProps) {
+export function EventHero({ event, isRegistered = false }: EventHeroProps) {
   const progressPercentage = (event.amountRaised / event.fundraisingGoal) * 100
   const formattedDate = new Date(event.date).toLocaleDateString('en-HK', {
     weekday: 'long',
@@ -151,9 +153,16 @@ export function EventHero({ event }: EventHeroProps) {
                   <Button className="w-full" size="lg" asChild>
                     <Link href={`/donate?event=${event.slug}`}>Donate Now</Link>
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg" asChild>
-                    <Link href={`/events/${event.slug}/register`}>Register to Participate</Link>
-                  </Button>
+                  {isRegistered ? (
+                    <Button variant="outline" className="w-full" size="lg" disabled>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      You&apos;re registered
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" size="lg" asChild>
+                      <Link href={`/events/${event.slug}/register`}>Register to Participate</Link>
+                    </Button>
+                  )}
                 </div>
 
                 <Button variant="ghost" size="sm" className="mt-4 w-full">

@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer"
 import { EventHero } from "@/components/events/event-hero"
 import { EventTabs } from "@/components/events/event-tabs"
 import { getEventView } from "@/lib/events"
+import { isRegisteredForEvent } from "@/lib/registrations"
 
 interface EventPageProps {
   params: Promise<{ slug: string }>
@@ -40,12 +41,14 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound()
   }
 
+  const isRegistered = await isRegisteredForEvent(event.id)
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <EventHero event={event} />
-        <EventTabs event={event} />
+        <EventHero event={event} isRegistered={isRegistered} />
+        <EventTabs event={event} isRegistered={isRegistered} />
       </main>
       <Footer />
     </div>

@@ -2,12 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, Heart, Lightbulb, Users, Building } from "lucide-react"
+import { Clock, Heart, Lightbulb, Users, Building, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Event } from "@/lib/types"
 
 interface EventTabsProps {
   event: Event
+  /** True when the signed-in user already has an active registration. */
+  isRegistered?: boolean
 }
 
 const tabs = [
@@ -17,7 +19,7 @@ const tabs = [
   { id: 'sponsors', label: 'Sponsors' },
 ]
 
-export function EventTabs({ event }: EventTabsProps) {
+export function EventTabs({ event, isRegistered = false }: EventTabsProps) {
   const [activeTab, setActiveTab] = useState('overview')
 
   return (
@@ -46,7 +48,7 @@ export function EventTabs({ event }: EventTabsProps) {
         <div className="mt-8">
           {activeTab === 'overview' && <OverviewTab event={event} />}
           {activeTab === 'schedule' && <ScheduleTab event={event} />}
-          {activeTab === 'contribute' && <ContributeTab event={event} />}
+          {activeTab === 'contribute' && <ContributeTab event={event} isRegistered={isRegistered} />}
           {activeTab === 'sponsors' && <SponsorsTab event={event} />}
         </div>
       </div>
@@ -136,7 +138,7 @@ function ScheduleTab({ event }: { event: Event }) {
   )
 }
 
-function ContributeTab({ event }: { event: Event }) {
+function ContributeTab({ event, isRegistered = false }: { event: Event; isRegistered?: boolean }) {
   const icons = {
     donation: Heart,
     time: Clock,
@@ -165,17 +167,24 @@ function ContributeTab({ event }: { event: Event }) {
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {contribution.description}
               </p>
-              <Button className="mt-4 w-full" variant="outline" asChild>
-                <Link
-                  href={
-                    contribution.type === 'donation'
-                      ? `/donate?event=${event.slug}`
-                      : `/events/${event.slug}/register`
-                  }
-                >
-                  {contribution.type === 'donation' ? 'Donate Now' : 'Sign Up'}
-                </Link>
-              </Button>
+              {contribution.type !== 'donation' && isRegistered ? (
+                <Button className="mt-4 w-full" variant="outline" disabled>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  You&apos;re registered
+                </Button>
+              ) : (
+                <Button className="mt-4 w-full" variant="outline" asChild>
+                  <Link
+                    href={
+                      contribution.type === 'donation'
+                        ? `/donate?event=${event.slug}`
+                        : `/events/${event.slug}/register`
+                    }
+                  >
+                    {contribution.type === 'donation' ? 'Donate Now' : 'Sign Up'}
+                  </Link>
+                </Button>
+              )}
             </div>
           )
         })}
