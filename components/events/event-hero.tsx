@@ -25,13 +25,13 @@ export function EventHero({ event, isRegistered = false }: EventHeroProps) {
 
   return (
     <section className="relative">
-      {/* Banner image placeholder */}
+      {/* Banner image (temporary — pending S3) */}
       <div className="relative h-64 bg-secondary sm:h-80 lg:h-96">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-serif text-2xl text-muted-foreground/50">
-            {event.title}
-          </span>
-        </div>
+        <img
+          src="/run_hero_banner.jpeg"
+          alt={event.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
       </div>

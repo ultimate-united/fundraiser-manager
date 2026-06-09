@@ -24,13 +24,14 @@ export function EventCard({ event, featured = false }: EventCardProps) {
         featured ? 'md:col-span-2 md:row-span-2' : ''
       }`}
     >
-      {/* Image placeholder */}
+      {/* Banner image (temporary — pending S3) */}
       <div className={`relative overflow-hidden bg-secondary ${featured ? 'h-64 md:h-80' : 'h-48'}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-serif text-xl text-muted-foreground/50">
-            {event.title}
-          </span>
-        </div>
+        <img
+          src="/run_hero_banner.jpeg"
+          alt={event.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         {/* Status badge */}
         <div className="absolute left-4 top-4">
           <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
