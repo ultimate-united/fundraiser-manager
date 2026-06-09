@@ -18,6 +18,8 @@ export interface UpcomingEvent {
   date: string
   location: string
   points: number
+  role: string
+  details: Record<string, string>
 }
 
 export interface PastEvent {
@@ -25,9 +27,16 @@ export interface PastEvent {
   title: string
   date: string
   location: string
+  role: string
   hoursLogged: number
   pointsEarned: number
 }
+
+const roleLabel = (role: string) => (role === "volunteer" ? "Volunteer" : "Participant")
+
+/** "participant_type" -> "Participant type" */
+const prettyKey = (key: string) =>
+  key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
 
 interface EventsContentProps {
   user: UserData
@@ -89,6 +98,7 @@ export function EventsContent({ user, upcomingEvents, pastEvents }: EventsConten
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-serif font-semibold text-lg">{event.title}</h3>
+                      <Badge variant="secondary">{roleLabel(event.role)}</Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
@@ -100,6 +110,16 @@ export function EventsContent({ user, upcomingEvents, pastEvents }: EventsConten
                         <span>{event.location}</span>
                       </div>
                     </div>
+                    {Object.keys(event.details).length > 0 && (
+                      <div className="mt-2 space-y-1 rounded-lg bg-secondary/40 p-3 text-sm">
+                        {Object.entries(event.details).map(([key, value]) => (
+                          <div key={key} className="flex gap-2">
+                            <span className="text-muted-foreground">{prettyKey(key)}:</span>
+                            <span className="font-medium">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className="text-sm font-semibold text-primary">+{event.points} pts</span>
@@ -126,6 +146,7 @@ export function EventsContent({ user, upcomingEvents, pastEvents }: EventsConten
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-serif font-semibold">{event.title}</h3>
+                      <Badge variant="secondary">{roleLabel(event.role)}</Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">

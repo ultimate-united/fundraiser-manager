@@ -31,9 +31,17 @@ const SKILLS = [
 interface RegistrationFormProps {
   eventId: string
   eventTitle: string
+  /** Prefill from the logged-in account. */
+  defaultName?: string
+  defaultEmail?: string
 }
 
-export function RegistrationForm({ eventId, eventTitle }: RegistrationFormProps) {
+export function RegistrationForm({
+  eventId,
+  eventTitle,
+  defaultName = "",
+  defaultEmail = "",
+}: RegistrationFormProps) {
   const [mode, setMode] = useState<"participant" | "volunteer">("participant")
   const [participantType, setParticipantType] = useState("individual")
   const [state, formAction, pending] = useActionState<RegistrationFormState, FormData>(
@@ -107,11 +115,17 @@ export function RegistrationForm({ eventId, eventTitle }: RegistrationFormProps)
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="full_name">Full name</Label>
-              <Input id="full_name" name="full_name" placeholder="Jane Doe" />
+              <Input id="full_name" name="full_name" placeholder="Jane Doe" defaultValue={defaultName} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="jane@example.com" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="jane@example.com"
+                defaultValue={defaultEmail}
+              />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="phone">Phone (optional)</Label>

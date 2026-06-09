@@ -13,7 +13,7 @@ export function getMyRegistrations() {
 export function registerForEvent(eventId: string, payload: RegisterIn = {}) {
   return apiFetch<RegistrationOut>(registrationEndpoints.register(eventId), {
     method: "POST",
-    body: JSON.stringify({ role: payload.role ?? "attendee" }),
+    body: JSON.stringify({ role: payload.role ?? "attendee", form_data: payload.form_data ?? {} }),
   })
 }
 

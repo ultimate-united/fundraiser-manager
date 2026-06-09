@@ -33,6 +33,7 @@ function toBaseView(dto: EventListItem): Omit<Event, "sponsors" | "schedule" | "
     amountRaised: centsToDollars(dto.amount_raised),
     participantCount: dto.participant_count ?? 0,
     participantGoal: dto.participant_goal ?? undefined,
+    impact: dto.impact ?? [],
     status: mapStatus(dto.status),
     featured: dto.featured,
     createdAt: "",

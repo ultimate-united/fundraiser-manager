@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.auth import CurrentUser, get_current_user, get_optional_user
 from app.core.config import get_settings
@@ -14,6 +14,7 @@ from app.schemas.donations import (
     RecurringCreate,
     RecurringOut,
     RecurringUpdate,
+    SupporterOut,
 )
 from app.services.payments import (
     create_billing_portal_session,
@@ -77,6 +78,34 @@ def list_my_donations(user: CurrentUser = Depends(get_current_user)):
         .execute()
     )
     return res.data or []
+
+
+@router.get("/recent", response_model=List[SupporterOut])
+def recent_supporters(
+    event_id: Optional[str] = Query(default=None, description="Filter to one event"),
+    limit: int = Query(default=5, le=20),
+):
+    """Public 'recent supporters' wall: completed donations only, anonymity-respecting,
+    no PII (no email; anonymous gifts show as 'Anonymous' with no message)."""
+    db = get_service_client()
+    q = (
+        db.table("donations")
+        .select("donor_name,amount,message,is_anonymous,created_at")
+        .eq("status", "completed")
+        .is_("deleted_at", "null")
+    )
+    if event_id:
+        q = q.eq("event_id", event_id)
+    rows = q.order("created_at", desc=True).limit(limit).execute().data or []
+    return [
+        {
+            "name": "Anonymous" if r.get("is_anonymous") else (r.get("donor_name") or "A supporter"),
+            "amount": r.get("amount", 0),
+            "message": None if r.get("is_anonymous") else r.get("message"),
+            "created_at": r.get("created_at"),
+        }
+        for r in rows
+    ]
 
 
 @router.post("/recurring", response_model=RecurringOut, status_code=201)

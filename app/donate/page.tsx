@@ -4,6 +4,8 @@ import { DonationForm } from "@/components/donate/donation-form"
 import { DonationImpact } from "@/components/donate/donation-impact"
 import { AlternativeDonationMethods } from "@/components/donate/alternative-donation-methods"
 import { getEventView } from "@/lib/events"
+import { getRecentSupporters } from "@/lib/api/donations"
+import { createClient } from "@/lib/supabase/server"
 import { Heart } from "lucide-react"
 
 interface DonatePageProps {
@@ -13,6 +15,17 @@ interface DonatePageProps {
 export default async function DonatePage({ searchParams }: DonatePageProps) {
   const { event: eventSlug } = await searchParams
   const event = eventSlug ? await getEventView(eventSlug) : null
+  const supporters = await getRecentSupporters(event?.id ?? null)
+
+  // Prefill donor details for logged-in users (donating is open to guests too).
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const defaultName = user
+    ? [user.user_metadata?.first_name, user.user_metadata?.last_name].filter(Boolean).join(" ")
+    : ""
+  const defaultEmail = user?.email ?? ""
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,10 +54,15 @@ export default async function DonatePage({ searchParams }: DonatePageProps) {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <div className="space-y-8">
-                <DonationForm eventId={event?.id ?? null} eventTitle={event?.title ?? null} />
+                <DonationForm
+                  eventId={event?.id ?? null}
+                  eventTitle={event?.title ?? null}
+                  defaultName={defaultName}
+                  defaultEmail={defaultEmail}
+                />
                 <AlternativeDonationMethods eventTitle={event?.title ?? null} />
               </div>
-              <DonationImpact />
+              <DonationImpact impact={event?.impact} supporters={supporters} />
             </div>
           </div>
         </section>

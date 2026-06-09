@@ -11,10 +11,13 @@ export interface RegistrationOut {
   status: RegistrationStatus
   hours_logged: number
   points_earned: number
+  form_data: Record<string, string>
   registered_at: string | null
 }
 
 /** Request body for POST /registrations/{eventId} (mirrors RegisterIn). */
 export interface RegisterIn {
   role?: RegistrationRole
+  /** Captured sign-up fields (string->string) until a form-builder exists. */
+  form_data?: Record<string, string>
 }

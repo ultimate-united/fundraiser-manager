@@ -58,6 +58,14 @@ class CheckoutSessionOut(BaseModel):
     url: str
 
 
+class SupporterOut(BaseModel):
+    """A public 'recent supporter' entry (anonymity-respecting; no PII)."""
+    name: str
+    amount: int  # minor units (cents)
+    message: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+
 class RecurringUpdate(BaseModel):
     status: Optional[RecurringStatus] = None
     amount: Optional[int] = Field(default=None, gt=0)

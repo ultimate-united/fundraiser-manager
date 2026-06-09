@@ -68,3 +68,11 @@ export interface RecurringCreate {
 export interface CheckoutSession {
   url: string
 }
+
+/** A public "recent supporter" entry (anonymity-respecting; no PII). */
+export interface Supporter {
+  name: string
+  amount: number // minor units (cents)
+  message: string | null
+  created_at: string | null
+}

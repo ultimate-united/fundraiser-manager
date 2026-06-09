@@ -1,4 +1,10 @@
 // Event types
+export interface ImpactItem {
+  amount: number
+  title: string
+  description: string
+}
+
 export interface Event {
   id: string
   slug: string
@@ -17,6 +23,7 @@ export interface Event {
   sponsors: Sponsor[]
   schedule: ScheduleItem[]
   contributionTypes: ContributionType[]
+  impact?: ImpactItem[]
   status: 'upcoming' | 'ongoing' | 'completed'
   featured?: boolean
   createdAt: string

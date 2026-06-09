@@ -8,6 +8,7 @@ import type {
   DonationOut,
   RecurringCreate,
   RecurringOut,
+  Supporter,
 } from "./types"
 
 /** The current user's one-off + recorded donations. */
@@ -52,6 +53,13 @@ export function createBillingPortalSession() {
   return apiFetch<CheckoutSession>(donationEndpoints.billingPortal, { method: "POST" })
 }
 
+/** Public recent-supporters wall, optionally scoped to one event. */
+export function getRecentSupporters(eventId?: string | null, limit = 5) {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (eventId) params.set("event_id", eventId)
+  return apiFetch<Supporter[]>(`${donationEndpoints.recent}?${params.toString()}`)
+}
+
 export type {
   CheckoutSession,
   DonationCreate,
@@ -59,6 +67,7 @@ export type {
   DonationOut,
   RecurringCreate,
   RecurringOut,
+  Supporter,
   DonationKind,
   DonationStatus,
   RecurringFrequency,

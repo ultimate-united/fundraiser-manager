@@ -34,6 +34,8 @@ class EventBase(BaseModel):
     points_reward: int = 0
     status: EventStatus
     featured: bool = False
+    # Editable "Your impact" tiers: list of {amount, title, description}.
+    impact: List[Any] = []
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     og_image: Optional[str] = None

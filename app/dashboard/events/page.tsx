@@ -29,6 +29,8 @@ export default async function DashboardEventsPage() {
         date: toDate(e?.starts_at ?? null),
         location: e?.location ?? "",
         points: r.points_earned,
+        role: r.role,
+        details: r.form_data ?? {},
       }
     })
 
@@ -41,6 +43,7 @@ export default async function DashboardEventsPage() {
         title: e?.title ?? "",
         date: toDate(e?.starts_at ?? null),
         location: e?.location ?? "",
+        role: r.role,
         hoursLogged: r.hours_logged,
         pointsEarned: r.points_earned,
       }

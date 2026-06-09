@@ -5,4 +5,5 @@ export const donationEndpoints = {
   recurring: "/donations/recurring",
   recurringCheckout: "/donations/recurring/checkout",
   billingPortal: "/donations/billing-portal",
+  recent: "/donations/recent",
 } as const

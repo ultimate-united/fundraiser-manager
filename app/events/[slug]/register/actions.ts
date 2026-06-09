@@ -30,8 +30,22 @@ export async function submitRegistration(
     return { status: "error", message: "Missing event reference — please reload and try again." }
   }
 
+  // Capture the submitted fields as a string->string record (no schema yet — a
+  // form-builder will formalize these later).
+  const formFields: Record<string, string> = {}
+  const put = (key: string) => {
+    const value = ((formData.get(key) as string) ?? "").trim()
+    if (value) formFields[key] = value
+  }
+  ;["full_name", "email", "phone", "party_size", "availability", "notes"].forEach(put)
+  if (mode === "participant") put("participant_type")
+  if (mode === "volunteer") {
+    const skills = formData.getAll("skills").map(String).filter(Boolean)
+    if (skills.length) formFields.skills = skills.join(", ")
+  }
+
   try {
-    await registerForEvent(eventId, { role })
+    await registerForEvent(eventId, { role, form_data: formFields })
     return {
       status: "success",
       role,

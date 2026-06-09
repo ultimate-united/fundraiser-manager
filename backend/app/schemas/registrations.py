@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -9,6 +9,8 @@ RegistrationStatus = str  # 'registered' | 'attended' | 'cancelled' | 'no_show'
 
 class RegisterIn(BaseModel):
     role: RegistrationRole = "attendee"
+    # Captured sign-up fields (string->string) until a dedicated form-builder exists.
+    form_data: Dict[str, str] = {}
 
 
 class RegistrationOut(BaseModel):
@@ -19,4 +21,5 @@ class RegistrationOut(BaseModel):
     status: RegistrationStatus
     hours_logged: float = 0
     points_earned: int = 0
+    form_data: Dict[str, str] = {}
     registered_at: Optional[datetime] = None

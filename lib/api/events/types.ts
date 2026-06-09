@@ -21,6 +21,8 @@ export interface EventListItem {
   points_reward: number
   status: EventStatus
   featured: boolean
+  // Editable "Your impact" tiers (admin-managed per event).
+  impact: { amount: number; title: string; description: string }[]
   // Aggregates from v_event_public:
   amount_raised: number // minor units (cents)
   participant_count: number

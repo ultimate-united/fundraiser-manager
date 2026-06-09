@@ -16,14 +16,19 @@ def register_for_event(
     (atomic capacity check; runs as the user so auth.uid() resolves)."""
     db = get_user_client(user.access_token)
     rpc = execute_rpc(db, "register_for_event", {"p_event_id": event_id, "p_role": payload.role})
-    res = (
-        get_service_client()
-        .table("event_registrations")
-        .select("*")
-        .eq("id", rpc.data)
-        .limit(1)
-        .execute()
-    )
+
+    service = get_service_client()
+    # Persist the captured sign-up fields (server-controlled column — no user RLS).
+    # Best-effort: tolerate the form_data column not existing yet (migration pending).
+    if payload.form_data:
+        try:
+            service.table("event_registrations").update({"form_data": payload.form_data}).eq(
+                "id", rpc.data
+            ).execute()
+        except Exception:
+            pass
+
+    res = service.table("event_registrations").select("*").eq("id", rpc.data).limit(1).execute()
     return single_row(res, not_found="Registration created but could not be loaded", status_code=500)
 
 

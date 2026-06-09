@@ -28,12 +28,21 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/auth/login?redirect=/events/${slug}/register`)
 
+  const defaultName = [user.user_metadata?.first_name, user.user_metadata?.last_name]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 py-12">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-          <RegistrationForm eventId={event.id} eventTitle={event.title} />
+          <RegistrationForm
+            eventId={event.id}
+            eventTitle={event.title}
+            defaultName={defaultName}
+            defaultEmail={user.email ?? ""}
+          />
         </div>
       </main>
       <Footer />

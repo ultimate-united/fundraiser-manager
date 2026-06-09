@@ -2,11 +2,23 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/auth/auth-provider"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/")
+    router.refresh() // re-runs the root layout so the header reflects logged-out
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -20,12 +32,28 @@ export function Header() {
 
         {/* CTA Buttons */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/login">Sign In</Link>
-          </Button>
-          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
-            <Link href="/">Donate</Link>
-          </Button>
+          {user ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+                <Link href="/donate">Donate</Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/auth/login">Sign In</Link>
+              </Button>
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+                <Link href="/donate">Donate</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -45,12 +73,28 @@ export function Header() {
         <div className="border-t border-border/40 bg-background md:hidden">
           <div className="space-y-1 px-4 py-4">
             <div className="flex flex-col gap-2 pt-4">
-              <Button variant="outline" asChild>
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button className="bg-primary text-primary-foreground" asChild>
-                <Link href="/">Donate</Link>
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button className="bg-primary text-primary-foreground" asChild>
+                    <Link href="/donate">Donate</Link>
+                  </Button>
+                  <Button variant="ghost" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link href="/auth/login">Sign In</Link>
+                  </Button>
+                  <Button className="bg-primary text-primary-foreground" asChild>
+                    <Link href="/donate">Donate</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

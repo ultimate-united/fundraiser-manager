@@ -21,6 +21,9 @@ interface DonationFormProps {
   /** When present, the donation is attributed to this event (else general fund). */
   eventId?: string | null
   eventTitle?: string | null
+  /** Prefill from the logged-in account (empty for guests). */
+  defaultName?: string
+  defaultEmail?: string
 }
 
 function SuccessCard({ message }: { message: string }) {
@@ -45,7 +48,12 @@ function SuccessCard({ message }: { message: string }) {
   )
 }
 
-export function DonationForm({ eventId = null, eventTitle = null }: DonationFormProps) {
+export function DonationForm({
+  eventId = null,
+  eventTitle = null,
+  defaultName = "",
+  defaultEmail = "",
+}: DonationFormProps) {
   const [amount, setAmount] = useState<number | null>(100)
   const [customAmount, setCustomAmount] = useState("")
   const [isAnonymous, setIsAnonymous] = useState(false)
@@ -165,7 +173,13 @@ export function DonationForm({ eventId = null, eventTitle = null }: DonationForm
           <div className="space-y-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="donor_name">Your Name</Label>
-              <Input id="donor_name" name="donor_name" placeholder="John Doe" disabled={isAnonymous} />
+              <Input
+                id="donor_name"
+                name="donor_name"
+                placeholder="John Doe"
+                defaultValue={defaultName}
+                disabled={isAnonymous}
+              />
             </div>
 
             <div className="space-y-2">
@@ -175,6 +189,7 @@ export function DonationForm({ eventId = null, eventTitle = null }: DonationForm
                 name="donor_email"
                 type="email"
                 placeholder="john@example.com"
+                defaultValue={defaultEmail}
                 required={frequency === "one_time"}
               />
             </div>
