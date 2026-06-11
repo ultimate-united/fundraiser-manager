@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from . import events, organizers, donations, registrations, rewards, users, webhooks
+from . import admin, events, organizers, donations, registrations, rewards, users, webhooks
 
 router = APIRouter()
+router.include_router(admin.router, prefix="/admin", tags=["admin"])
 router.include_router(events.router, prefix="/events", tags=["events"])
 router.include_router(organizers.router, prefix="/organizers", tags=["organizers"])
 router.include_router(registrations.router, prefix="/registrations", tags=["registrations"])

@@ -50,3 +50,44 @@ class EventListItem(EventBase):
 
 class EventDetailOut(EventListItem):
     sections: List[EventSectionOut] = []
+
+
+class EventCreate(BaseModel):
+    """Admin create payload. organizer_id defaults to the sole organizer if omitted."""
+    slug: str
+    title: str
+    organizer_id: Optional[str] = None
+    subtitle: Optional[str] = None
+    mission: Optional[str] = None
+    summary: Optional[str] = None
+    banner_image: Optional[str] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    location: Optional[str] = None
+    fundraising_goal: Optional[int] = None  # minor units (cents)
+    participant_goal: Optional[int] = None
+    volunteer_spots: Optional[int] = None
+    points_reward: int = 0
+    status: EventStatus = "draft"
+    featured: bool = False
+    impact: List[Any] = []
+
+
+class EventUpdate(BaseModel):
+    """Admin partial-update payload (only provided fields change)."""
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    mission: Optional[str] = None
+    summary: Optional[str] = None
+    banner_image: Optional[str] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    location: Optional[str] = None
+    fundraising_goal: Optional[int] = None
+    participant_goal: Optional[int] = None
+    volunteer_spots: Optional[int] = None
+    points_reward: Optional[int] = None
+    status: Optional[EventStatus] = None
+    featured: Optional[bool] = None
+    impact: Optional[List[Any]] = None
