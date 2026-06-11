@@ -1,6 +1,3 @@
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import {
   DashboardOverview,
   type ActivityItem,
@@ -13,7 +10,7 @@ import { getRewardCatalog } from "@/lib/api/rewards"
 import { getDashboardUser } from "@/lib/dashboard"
 
 export default async function DashboardPage() {
-  const user = await getDashboardUser("/dashboard")
+  const user = await getDashboardUser()
 
   // Fail-fast: any DAL error throws to app/dashboard/error.tsx.
   const [rewards, registrations, donations, events] = await Promise.all([
@@ -62,19 +59,10 @@ export default async function DashboardPage() {
     .slice(0, 3)
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <DashboardSidebar user={user} />
-          <DashboardOverview
-            user={user}
-            recentActivity={recentActivity}
-            availableRewards={availableRewards}
-          />
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <DashboardOverview
+      user={user}
+      recentActivity={recentActivity}
+      availableRewards={availableRewards}
+    />
   )
 }

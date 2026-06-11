@@ -1,6 +1,3 @@
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import {
   EventsContent,
   type UpcomingEvent,
@@ -14,7 +11,7 @@ import { getDashboardUser } from "@/lib/dashboard"
 const toDate = (iso: string | null) => (iso ?? "").slice(0, 10)
 
 export default async function DashboardEventsPage() {
-  const user = await getDashboardUser("/dashboard/events")
+  const user = await getDashboardUser()
   const [registrations, events] = await Promise.all([getMyRegistrations(), getEvents()])
 
   const eventMap = new Map(events.map((e) => [e.id, e]))
@@ -49,16 +46,5 @@ export default async function DashboardEventsPage() {
       }
     })
 
-  return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <DashboardSidebar user={user} />
-          <EventsContent user={user} upcomingEvents={upcomingEvents} pastEvents={pastEvents} />
-        </div>
-      </main>
-      <Footer />
-    </div>
-  )
+  return <EventsContent user={user} upcomingEvents={upcomingEvents} pastEvents={pastEvents} />
 }

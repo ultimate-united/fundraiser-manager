@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { redirect } from "next/navigation"
 
 import { getDashboard } from "@/lib/api/users"
@@ -23,7 +24,7 @@ export interface UserData {
  * unauthenticated callers to login, otherwise maps the backend DashboardDto to
  * UserData. Single source of truth so every dashboard page stays consistent.
  */
-export async function getDashboardUser(redirectTo = "/dashboard"): Promise<UserData> {
+export const getDashboardUser = cache(async (redirectTo = "/dashboard"): Promise<UserData> => {
   const supabase = await createClient()
   const {
     data: { user },
@@ -43,4 +44,4 @@ export async function getDashboardUser(redirectTo = "/dashboard"): Promise<UserD
     totalDonated: Math.round(d.total_donated / 100), // cents -> dollars
     hoursVolunteered: d.hours_volunteered,
   }
-}
+})
