@@ -34,3 +34,19 @@ export interface NotificationPrefsOut {
   donation_receipts: boolean
   newsletter: boolean
 }
+
+/** Request body for PATCH /users/me (mirrors ProfileUpdate). */
+export interface ProfileUpdate {
+  first_name?: string
+  last_name?: string
+  avatar_url?: string | null
+  profile_type?: ProfileType
+}
+
+/** Request body for PATCH /users/me/notifications (mirrors NotificationPrefsUpdate). */
+export interface NotificationPrefsUpdate {
+  email_notifications?: boolean
+  event_reminders?: boolean
+  donation_receipts?: boolean
+  newsletter?: boolean
+}

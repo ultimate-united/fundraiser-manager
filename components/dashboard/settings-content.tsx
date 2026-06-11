@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState, useState, useTransition } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { User, Bell, Shield, Trash2 } from "lucide-react"
+import { User, Bell, Shield, Trash2, Loader2, CheckCircle2 } from "lucide-react"
 import type { UserData } from "@/lib/dashboard"
-import type { NotificationPrefsOut } from "@/lib/api/users/types"
+import type { NotificationPrefsOut, NotificationPrefsUpdate } from "@/lib/api/users/types"
+import { saveNotifications, saveProfile, type ProfileFormState } from "@/app/dashboard/settings/actions"
 
 interface SettingsContentProps {
   user: UserData
@@ -21,18 +21,38 @@ interface SettingsContentProps {
 }
 
 export function SettingsContent({ user, profile, notifications }: SettingsContentProps) {
-  const [emailNotifs, setEmailNotifs] = useState(notifications.email_notifications)
-  const [eventReminders, setEventReminders] = useState(notifications.event_reminders)
-  const [donationReceipts, setDonationReceipts] = useState(notifications.donation_receipts)
-  const [newsletter, setNewsletter] = useState(notifications.newsletter)
+  const [profileState, profileAction, profilePending] = useActionState<ProfileFormState, FormData>(
+    saveProfile,
+    null,
+  )
+
+  const [prefs, setPrefs] = useState(notifications)
+  const [savingPrefs, startPrefTransition] = useTransition()
+  const [prefError, setPrefError] = useState(false)
+
+  const togglePref = (key: keyof NotificationPrefsOut, value: boolean) => {
+    setPrefs((p) => ({ ...p, [key]: value }))
+    setPrefError(false)
+    startPrefTransition(async () => {
+      const res = await saveNotifications({ [key]: value } as NotificationPrefsUpdate)
+      if (!res.ok) {
+        setPrefs((p) => ({ ...p, [key]: !value })) // revert on failure
+        setPrefError(true)
+      }
+    })
+  }
+
+  const prefStatus = savingPrefs
+    ? "Saving…"
+    : prefError
+      ? "Couldn't save — please try again"
+      : "Changes save automatically"
 
   return (
     <div className="flex-1 space-y-6">
       <div>
         <h1 className="font-serif text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your account details and preferences.
-        </p>
+        <p className="text-muted-foreground mt-1">Manage your account details and preferences.</p>
       </div>
 
       {/* Profile */}
@@ -44,29 +64,50 @@ export function SettingsContent({ user, profile, notifications }: SettingsConten
           </CardTitle>
           <CardDescription>Update your personal information</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" defaultValue={profile.firstName} />
+        <CardContent>
+          <form action={profileAction} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" name="first_name" defaultValue={profile.firstName} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input id="lastName" name="last_name" defaultValue={profile.lastName} />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" defaultValue={profile.lastName} />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" defaultValue={user.email} disabled />
+              <p className="text-xs text-muted-foreground">Email changes aren&apos;t available here yet.</p>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue={user.email} />
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Membership tier:</span>
-              <Badge className="capitalize">{user.tier}</Badge>
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <span>Membership tier:</span>
+                  <Badge className="capitalize">{user.tier}</Badge>
+                </div>
+                {profileState?.status === "success" && (
+                  <span className="flex items-center gap-1 text-primary">
+                    <CheckCircle2 className="h-4 w-4" /> {profileState.message}
+                  </span>
+                )}
+                {profileState?.status === "error" && (
+                  <span className="text-destructive">{profileState.message}</span>
+                )}
+              </div>
+              <Button type="submit" disabled={profilePending}>
+                {profilePending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </div>
-            {/* TODO: wire to Supabase update */}
-            <Button>Save Changes</Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
@@ -77,22 +118,27 @@ export function SettingsContent({ user, profile, notifications }: SettingsConten
             <Bell className="w-5 h-5 text-primary" />
             Notifications
           </CardTitle>
-          <CardDescription>Choose what you want to be notified about</CardDescription>
+          <CardDescription>
+            Choose what you want to be notified about · <span className={prefError ? "text-destructive" : ""}>{prefStatus}</span>
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {[
-            { label: "Email notifications", description: "Receive emails for account activity", state: emailNotifs, setter: setEmailNotifs },
-            { label: "Event reminders", description: "Get reminded 24h before registered events", state: eventReminders, setter: setEventReminders },
-            { label: "Donation receipts", description: "Receive receipts for every donation", state: donationReceipts, setter: setDonationReceipts },
-            { label: "Newsletter", description: "Monthly impact updates and community news", state: newsletter, setter: setNewsletter },
-          ].map(({ label, description, state, setter }) => (
-            <div key={label} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+          {([
+            { key: "email_notifications", label: "Email notifications", description: "Receive emails for account activity" },
+            { key: "event_reminders", label: "Event reminders", description: "Get reminded 24h before registered events" },
+            { key: "donation_receipts", label: "Donation receipts", description: "Receive receipts for every donation" },
+            { key: "newsletter", label: "Newsletter", description: "Monthly impact updates and community news" },
+          ] as const).map(({ key, label, description }) => (
+            <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
               <div>
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-xs text-muted-foreground">{description}</p>
               </div>
-              {/* TODO: wire to Supabase update */}
-              <Switch checked={state} onCheckedChange={setter} />
+              <Switch
+                checked={prefs[key]}
+                disabled={savingPrefs}
+                onCheckedChange={(v) => togglePref(key, v)}
+              />
             </div>
           ))}
         </CardContent>
