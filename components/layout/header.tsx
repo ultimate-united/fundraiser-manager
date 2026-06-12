@@ -32,6 +32,9 @@ export function Header() {
 
         {/* CTA Buttons */}
         <div className="hidden items-center gap-3 md:flex">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/">Events</Link>
+          </Button>
           {user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -73,6 +76,9 @@ export function Header() {
         <div className="border-t border-border/40 bg-background md:hidden">
           <div className="space-y-1 px-4 py-4">
             <div className="flex flex-col gap-2 pt-4">
+              <Button variant="outline" asChild>
+                <Link href="/">Events</Link>
+              </Button>
               {user ? (
                 <>
                   <Button variant="outline" asChild>

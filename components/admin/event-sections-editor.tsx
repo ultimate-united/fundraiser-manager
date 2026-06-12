@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   Accordion,
   AccordionContent,
@@ -12,9 +12,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { CheckCircle2, Loader2, Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { CONTRIBUTION_ICON_OPTIONS } from "@/components/events/contribution-icons"
-import { saveSections, type SectionsFormState } from "@/app/admin/events/[id]/sections-actions"
 import type { AdminSection, SectionInput } from "@/lib/api/admin/types"
 
 type OverviewCardRow = { icon: string; title: string; body: string }
@@ -114,15 +113,8 @@ function buildPayload(s: EditorState): SectionInput[] {
   ]
 }
 
-export function EventSectionsEditor({
-  eventId,
-  initialSections,
-}: {
-  eventId: string
-  initialSections: AdminSection[]
-}) {
+export function EventSectionsEditor({ initialSections }: { initialSections: AdminSection[] }) {
   const [state, setState] = useState<EditorState>(() => initialState(initialSections))
-  const [result, action, pending] = useActionState<SectionsFormState, FormData>(saveSections, null)
 
   // Typed-ish generic updaters for the item arrays.
   const setOverviewCards = (items: OverviewCardRow[]) => setState((s) => ({ ...s, overview: { ...s.overview, items } }))
@@ -131,17 +123,17 @@ export function EventSectionsEditor({
   const setSponsors = (items: SponsorRow[]) => setState((s) => ({ ...s, sponsors: { ...s.sponsors, items } }))
 
   return (
-    <Accordion type="single" collapsible className="rounded-xl border bg-card px-4">
-      <AccordionItem value="content" className="border-none">
-        <AccordionTrigger className="text-base font-medium">
-          Advanced — event content (tabs)
-        </AccordionTrigger>
-        <AccordionContent>
-          <form action={action} className="space-y-8 pb-2">
-            <input type="hidden" name="event_id" value={eventId} />
-            <input type="hidden" name="payload" value={JSON.stringify(buildPayload(state))} />
-
-            {/* Overview (always shown) */}
+    <div className="space-y-2">
+      {/* Always-rendered (outside the collapsible) so it submits with the parent form. */}
+      <input type="hidden" name="sections_payload" value={JSON.stringify(buildPayload(state))} />
+      <Accordion type="single" collapsible className="rounded-xl border bg-card px-4">
+        <AccordionItem value="content" className="border-none">
+          <AccordionTrigger className="text-base font-medium">
+            Advanced — event content (tabs)
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-8 pb-2">
+              {/* Overview (always shown) */}
             <section className="space-y-3 rounded-lg border p-4">
               <h3 className="font-semibold text-foreground">Overview <span className="text-xs font-normal text-muted-foreground">· always shown</span></h3>
               <Field label="Tab heading" value={state.overview.title} onChange={(v) => setState((s) => ({ ...s, overview: { ...s.overview, title: v } }))} />
@@ -242,20 +234,11 @@ export function EventSectionsEditor({
               <AddButton label="Add sponsor" onClick={() => setSponsors([...state.sponsors.items, { name: "", tier: "gold" }])} />
               <p className="text-xs text-muted-foreground">The &quot;Interested in sponsoring?&quot; section always shows.</p>
             </SectionShell>
-
-            <div className="flex items-center gap-3 border-t pt-4">
-              <Button type="submit" disabled={pending}>
-                {pending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</>) : "Save content"}
-              </Button>
-              {result?.status === "success" && (
-                <span className="flex items-center gap-1 text-sm text-primary"><CheckCircle2 className="h-4 w-4" />{result.message}</span>
-              )}
-              {result?.status === "error" && <span className="text-sm text-destructive">{result.message}</span>}
             </div>
-          </form>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
   )
 }
 

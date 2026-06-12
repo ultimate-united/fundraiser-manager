@@ -9,14 +9,21 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Loader2 } from "lucide-react"
 import { saveEvent, type EventFormState } from "@/app/admin/events/actions"
-import type { AdminEvent } from "@/lib/api/admin/types"
+import { EventSectionsEditor } from "@/components/admin/event-sections-editor"
+import type { AdminEvent, AdminSection } from "@/lib/api/admin/types"
 
 const STATUSES = ["draft", "upcoming", "ongoing", "completed", "cancelled"] as const
 
 /** Trim an ISO timestamp to the `YYYY-MM-DDTHH:mm` a datetime-local input wants. */
 const toLocalInput = (iso: string | null | undefined) => (iso ? iso.slice(0, 16) : "")
 
-export function EventForm({ event }: { event?: AdminEvent }) {
+export function EventForm({
+  event,
+  initialSections,
+}: {
+  event?: AdminEvent
+  initialSections: AdminSection[]
+}) {
   const [state, action, pending] = useActionState<EventFormState, FormData>(saveEvent, null)
   const [featured, setFeatured] = useState(event?.featured ?? false)
 
@@ -44,11 +51,9 @@ export function EventForm({ event }: { event?: AdminEvent }) {
       <div className="space-y-2">
         <Label htmlFor="mission">Mission</Label>
         <Textarea id="mission" name="mission" rows={2} defaultValue={event?.mission ?? ""} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="summary">Summary / description</Label>
-        <Textarea id="summary" name="summary" rows={3} defaultValue={event?.summary ?? ""} />
+        <p className="text-xs text-muted-foreground">
+          The longer description lives in the Overview tab body under &quot;Advanced — event content&quot; below.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -122,6 +127,9 @@ export function EventForm({ event }: { event?: AdminEvent }) {
         </div>
         <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
       </div>
+
+      {/* Editable content tabs — emits a hidden `sections_payload` saved with this form. */}
+      <EventSectionsEditor initialSections={initialSections} />
 
       {state?.status === "error" && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{state.message}</div>
