@@ -42,7 +42,7 @@ def get_event(slug: str):
 
     sections_res = (
         db.table("event_sections")
-        .select("id,kind,title,position,content")
+        .select("*")  # includes `enabled` once the migration is applied
         .eq("event_id", event["id"])
         .order("position")
         .execute()

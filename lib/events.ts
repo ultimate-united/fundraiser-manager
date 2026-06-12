@@ -1,6 +1,6 @@
 import { getEvent, getEvents } from "@/lib/api/events"
 import type { EventDetail, EventListItem } from "@/lib/api/events/types"
-import type { ContributionType, Event, ScheduleItem, Sponsor } from "@/lib/types"
+import type { ContributionType, Event, ScheduleItem, SectionContent, Sponsor } from "@/lib/types"
 
 /**
  * Events view-model layer: maps the FastAPI events DTOs (snake_case, money in
@@ -41,10 +41,48 @@ function toBaseView(dto: EventListItem): Omit<Event, "sponsors" | "schedule" | "
   }
 }
 
-/** Pull the content array of the first section with the given kind, or []. */
-function sectionContent<T>(detail: EventDetail, kind: string): T[] {
+// Defaults that preserve the original tab copy when a section has no stored value.
+const SECTION_DEFAULTS = {
+  overview: { title: "About This Event", body: "" },
+  schedule: { title: "Event Schedule", body: "Here's what to expect throughout the day" },
+  contribution: {
+    title: "How You Can Contribute",
+    body: "There are many ways to support this event and make a difference",
+  },
+  sponsors: {
+    title: "Our Sponsors",
+    body: "We are grateful to the organizations that make this event possible",
+  },
+} as const
+
+/** Items for a section — tolerant of legacy array content and the { body, items } shape. */
+function sectionItems<T>(detail: EventDetail, kind: string): T[] {
+  const content = detail.sections.find((s) => s.kind === kind)?.content
+  if (Array.isArray(content)) return content as T[]
+  if (content && typeof content === "object" && Array.isArray((content as { items?: unknown[] }).items)) {
+    return (content as { items: T[] }).items
+  }
+  return []
+}
+
+/** Editable heading/body/enabled for a tab, falling back to the original copy. */
+function tabSection(
+  detail: EventDetail,
+  kind: string,
+  defaults: { title: string; body: string },
+  alwaysEnabled = false,
+): SectionContent {
   const section = detail.sections.find((s) => s.kind === kind)
-  return Array.isArray(section?.content) ? (section.content as T[]) : []
+  const content = section?.content
+  const storedBody =
+    content && !Array.isArray(content) && typeof content === "object"
+      ? ((content as { body?: string }).body ?? "")
+      : ""
+  return {
+    title: section?.title || defaults.title,
+    body: storedBody || defaults.body,
+    enabled: alwaysEnabled ? true : section ? (section.enabled ?? true) : false,
+  }
 }
 
 /** List view: no sections available from the feed, so contribution surfaces are empty. */
@@ -54,19 +92,37 @@ function toListView(dto: EventListItem): Event {
 
 /** Detail view: hydrate sponsors / schedule / contribution tabs from JSONB sections. */
 function toDetailView(detail: EventDetail): Event {
-  const sponsors: Sponsor[] = sectionContent<{ name: string; tier: Sponsor["tier"]; logo?: string; website?: string }>(
-    detail,
-    "sponsors",
-  ).map((s, i) => ({ id: `sponsor-${i}`, name: s.name, tier: s.tier, logo: s.logo, website: s.website }))
+  const base = toBaseView(detail)
 
-  const schedule: ScheduleItem[] = sectionContent<Omit<ScheduleItem, "id">>(detail, "schedule").map((item, i) => ({
-    id: `sch-${i}`,
-    ...item,
+  const sponsors: Sponsor[] = sectionItems<{
+    name: string
+    tier: Sponsor["tier"]
+    logo?: string
+    website?: string
+  }>(detail, "sponsors").map((s, i) => ({
+    id: `sponsor-${i}`,
+    name: s.name,
+    tier: s.tier,
+    logo: s.logo,
+    website: s.website,
   }))
 
-  const contributionTypes = sectionContent<ContributionType>(detail, "contribution")
+  const schedule: ScheduleItem[] = sectionItems<Omit<ScheduleItem, "id">>(detail, "schedule").map(
+    (item, i) => ({ id: `sch-${i}`, ...item }),
+  )
 
-  return { ...toBaseView(detail), sponsors, schedule, contributionTypes }
+  const contributionTypes = sectionItems<ContributionType>(detail, "contribution")
+
+  const tabContent = {
+    overview: tabSection(detail, "rich_text", SECTION_DEFAULTS.overview, true),
+    schedule: tabSection(detail, "schedule", SECTION_DEFAULTS.schedule),
+    contribution: tabSection(detail, "contribution", SECTION_DEFAULTS.contribution),
+    sponsors: tabSection(detail, "sponsors", SECTION_DEFAULTS.sponsors),
+  }
+  // Overview body falls back to the event summary when no rich_text section exists.
+  if (!tabContent.overview.body) tabContent.overview.body = base.description ?? ""
+
+  return { ...base, sponsors, schedule, contributionTypes, tabContent }
 }
 
 /** Upcoming events for the landing grid (matches the page's "Upcoming Events" heading). */

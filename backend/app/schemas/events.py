@@ -13,6 +13,16 @@ class EventSectionOut(BaseModel):
     title: str
     position: int
     content: Any  # JSONB — shape depends on `kind` (see schema design)
+    enabled: bool = True
+
+
+class SectionIn(BaseModel):
+    """One content section in an admin replace-sections request."""
+    kind: SectionKind
+    title: str
+    position: int = 0
+    content: Any = {}
+    enabled: bool = True
 
 
 class EventBase(BaseModel):

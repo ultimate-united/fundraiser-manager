@@ -12,15 +12,16 @@ interface EventTabsProps {
   isRegistered?: boolean
 }
 
-const tabs = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'schedule', label: 'Schedule' },
-  { id: 'contribute', label: 'How to Contribute' },
-  { id: 'sponsors', label: 'Sponsors' },
-]
-
 export function EventTabs({ event, isRegistered = false }: EventTabsProps) {
-  const [activeTab, setActiveTab] = useState('overview')
+  const tc = event.tabContent
+  // Overview always shows; the rest only when their section is enabled.
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    ...(tc?.schedule.enabled ? [{ id: "schedule", label: "Schedule" }] : []),
+    ...(tc?.contribution.enabled ? [{ id: "contribute", label: "How to Contribute" }] : []),
+    ...(tc?.sponsors.enabled ? [{ id: "sponsors", label: "Sponsors" }] : []),
+  ]
+  const [activeTab, setActiveTab] = useState("overview")
 
   return (
     <section className="py-12">
@@ -34,8 +35,8 @@ export function EventTabs({ event, isRegistered = false }: EventTabsProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
                 }`}
               >
                 {tab.label}
@@ -46,10 +47,10 @@ export function EventTabs({ event, isRegistered = false }: EventTabsProps) {
 
         {/* Tab content */}
         <div className="mt-8">
-          {activeTab === 'overview' && <OverviewTab event={event} />}
-          {activeTab === 'schedule' && <ScheduleTab event={event} />}
-          {activeTab === 'contribute' && <ContributeTab event={event} isRegistered={isRegistered} />}
-          {activeTab === 'sponsors' && <SponsorsTab event={event} />}
+          {activeTab === "overview" && <OverviewTab event={event} />}
+          {activeTab === "schedule" && <ScheduleTab event={event} />}
+          {activeTab === "contribute" && <ContributeTab event={event} isRegistered={isRegistered} />}
+          {activeTab === "sponsors" && <SponsorsTab event={event} />}
         </div>
       </div>
     </section>
@@ -57,12 +58,13 @@ export function EventTabs({ event, isRegistered = false }: EventTabsProps) {
 }
 
 function OverviewTab({ event }: { event: Event }) {
+  const tc = event.tabContent?.overview
   return (
     <div className="prose prose-lg max-w-none">
-      <h2 className="font-serif text-2xl font-semibold text-foreground">About This Event</h2>
-      <p className="mt-4 text-muted-foreground leading-relaxed">
-        {event.description}
-      </p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">
+        {tc?.title || "About This Event"}
+      </h2>
+      <p className="mt-4 text-muted-foreground leading-relaxed">{tc?.body || event.description}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-6">
@@ -92,12 +94,13 @@ function OverviewTab({ event }: { event: Event }) {
 }
 
 function ScheduleTab({ event }: { event: Event }) {
+  const tc = event.tabContent?.schedule
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">Event Schedule</h2>
-      <p className="mt-2 text-muted-foreground">
-        Here&apos;s what to expect throughout the day
-      </p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">
+        {tc?.title || "Event Schedule"}
+      </h2>
+      <p className="mt-2 text-muted-foreground">{tc?.body || "Here's what to expect throughout the day"}</p>
 
       <div className="mt-8 space-y-4">
         {event.schedule.map((item, index) => (
@@ -105,29 +108,22 @@ function ScheduleTab({ event }: { event: Event }) {
             key={item.id}
             className="relative flex gap-6 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/30"
           >
-            {/* Time */}
             <div className="flex-shrink-0 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                 <Clock className="h-6 w-6 text-primary" />
               </div>
               <p className="mt-2 text-sm font-semibold text-foreground">{item.time}</p>
-              {item.endTime && (
-                <p className="text-xs text-muted-foreground">to {item.endTime}</p>
-              )}
+              {item.endTime && <p className="text-xs text-muted-foreground">to {item.endTime}</p>}
             </div>
 
-            {/* Content */}
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">{item.title}</h3>
               {item.description && (
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               )}
-              {item.location && (
-                <p className="mt-2 text-xs text-primary">{item.location}</p>
-              )}
+              {item.location && <p className="mt-2 text-xs text-primary">{item.location}</p>}
             </div>
 
-            {/* Timeline connector */}
             {index < event.schedule.length - 1 && (
               <div className="absolute bottom-0 left-[2.75rem] h-4 w-px translate-y-full bg-border" />
             )}
@@ -139,6 +135,7 @@ function ScheduleTab({ event }: { event: Event }) {
 }
 
 function ContributeTab({ event, isRegistered = false }: { event: Event; isRegistered?: boolean }) {
+  const tc = event.tabContent?.contribution
   const icons = {
     donation: Heart,
     time: Clock,
@@ -147,9 +144,11 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">How You Can Contribute</h2>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">
+        {tc?.title || "How You Can Contribute"}
+      </h2>
       <p className="mt-2 text-muted-foreground">
-        There are many ways to support this event and make a difference
+        {tc?.body || "There are many ways to support this event and make a difference"}
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -164,10 +163,10 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
                 <Icon className="h-6 w-6 text-primary" />
               </div>
               <h3 className="mt-4 font-semibold text-foreground">{contribution.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {contribution.description}
               </p>
-              {contribution.type !== 'donation' && isRegistered ? (
+              {contribution.type !== "donation" && isRegistered ? (
                 <Button className="mt-4 w-full" variant="outline" disabled>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   You&apos;re registered
@@ -176,12 +175,12 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
                 <Button className="mt-4 w-full" variant="outline" asChild>
                   <Link
                     href={
-                      contribution.type === 'donation'
+                      contribution.type === "donation"
                         ? `/donate?event=${event.slug}`
                         : `/events/${event.slug}/register`
                     }
                   >
-                    {contribution.type === 'donation' ? 'Donate Now' : 'Sign Up'}
+                    {contribution.type === "donation" ? "Donate Now" : "Sign Up"}
                   </Link>
                 </Button>
               )}
@@ -190,14 +189,13 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
         })}
       </div>
 
-      {/* Donor participation mode */}
       <div className="mt-12 rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center">
         <h3 className="font-serif text-xl font-semibold text-foreground">
           Can&apos;t attend but want to help?
         </h3>
         <p className="mx-auto mt-2 max-w-lg text-muted-foreground">
-          You can still make a difference by donating to this event. Every contribution, 
-          no matter the size, helps us reach our goal.
+          You can still make a difference by donating to this event. Every contribution, no matter
+          the size, helps us reach our goal.
         </p>
         <Button size="lg" className="mt-6" asChild>
           <Link href={`/donate?event=${event.slug}`}>Make a Donation</Link>
@@ -208,21 +206,22 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
 }
 
 function SponsorsTab({ event }: { event: Event }) {
+  const tc = event.tabContent?.sponsors
   const tierOrder = { platinum: 0, gold: 1, silver: 2, bronze: 3 }
   const sortedSponsors = [...event.sponsors].sort((a, b) => tierOrder[a.tier] - tierOrder[b.tier])
 
   const tierStyles = {
-    platinum: 'border-2 border-primary bg-primary/5',
-    gold: 'border-2 border-accent bg-accent/5',
-    silver: 'border border-border bg-secondary/50',
-    bronze: 'border border-border bg-card',
+    platinum: "border-2 border-primary bg-primary/5",
+    gold: "border-2 border-accent bg-accent/5",
+    silver: "border border-border bg-secondary/50",
+    bronze: "border border-border bg-card",
   }
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">Our Sponsors</h2>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title || "Our Sponsors"}</h2>
       <p className="mt-2 text-muted-foreground">
-        We are grateful to the organizations that make this event possible
+        {tc?.body || "We are grateful to the organizations that make this event possible"}
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -242,6 +241,7 @@ function SponsorsTab({ event }: { event: Event }) {
         ))}
       </div>
 
+      {/* Always shown, per spec */}
       <div className="mt-12 text-center">
         <h3 className="font-semibold text-foreground">Interested in sponsoring?</h3>
         <p className="mt-2 text-sm text-muted-foreground">

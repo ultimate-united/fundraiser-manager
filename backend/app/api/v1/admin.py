@@ -11,7 +11,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import CurrentUser, get_current_user
 from app.db.helpers import single_row
 from app.db.supabase import get_service_client
-from app.schemas.events import EventBase, EventCreate, EventListItem, EventUpdate
+from app.schemas.events import (
+    EventBase,
+    EventCreate,
+    EventListItem,
+    EventSectionOut,
+    EventUpdate,
+    SectionIn,
+)
 
 router = APIRouter()
 
@@ -73,3 +80,40 @@ def admin_update_event(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(getattr(exc, "message", exc)))
     return single_row(res, not_found="Event not found")
+
+
+@router.get("/events/{event_id}/sections", response_model=List[EventSectionOut])
+def admin_list_sections(event_id: str, _admin: CurrentUser = Depends(get_admin_user)):
+    db = get_service_client()
+    res = (
+        db.table("event_sections").select("*").eq("event_id", event_id).order("position").execute()
+    )
+    return res.data or []
+
+
+@router.put("/events/{event_id}/sections", response_model=List[EventSectionOut])
+def admin_replace_sections(
+    event_id: str, sections: List[SectionIn], _admin: CurrentUser = Depends(get_admin_user)
+):
+    """Replace ALL content sections for an event (delete + reinsert)."""
+    db = get_service_client()
+    single_row(
+        db.table("events").select("id").eq("id", event_id).limit(1).execute(),
+        not_found="Event not found",
+    )
+    db.table("event_sections").delete().eq("event_id", event_id).execute()
+    if not sections:
+        return []
+    rows = [
+        {
+            "event_id": event_id,
+            "kind": s.kind,
+            "title": s.title,
+            "position": s.position,
+            "content": s.content,
+            "enabled": s.enabled,
+        }
+        for s in sections
+    ]
+    res = db.table("event_sections").insert(rows).execute()
+    return res.data or []

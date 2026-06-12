@@ -35,7 +35,8 @@ export interface EventSection {
   kind: "rich_text" | "schedule" | "sponsors" | "contribution" | "faq" | "organizer" | "custom"
   title: string
   position: number
-  content: unknown // JSONB — shape depends on `kind`
+  content: unknown // JSONB — array (legacy) or { body, items } (current)
+  enabled?: boolean
 }
 
 /** Full event detail (list fields + ordered dynamic sections). */

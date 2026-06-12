@@ -46,3 +46,24 @@ export interface EventCreate {
 }
 
 export type EventUpdate = Partial<EventCreate>
+
+export type SectionKind = "rich_text" | "schedule" | "contribution" | "sponsors"
+
+/** One editable content section (Overview/Schedule/Contribute/Sponsors). */
+export interface AdminSection {
+  id: string
+  kind: SectionKind
+  title: string
+  position: number
+  content: { body?: string; items?: unknown[] } | unknown[]
+  enabled: boolean
+}
+
+/** Replace-sections request item. */
+export interface SectionInput {
+  kind: SectionKind
+  title: string
+  position: number
+  content: { body: string; items: unknown[] }
+  enabled: boolean
+}

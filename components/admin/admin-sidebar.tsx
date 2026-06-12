@@ -23,8 +23,8 @@ export function AdminSidebar() {
   return (
     <aside className="lg:w-64 flex-shrink-0">
       <Card className="sticky top-24">
-        <CardContent className="p-4">
-          <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <CardContent className="p-2">
+          <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Admin
           </p>
           <nav className="space-y-1">

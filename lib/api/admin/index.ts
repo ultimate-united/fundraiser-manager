@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api/client"
 
 import { adminEndpoints } from "./endpoints"
-import type { AdminEvent, EventCreate, EventUpdate } from "./types"
+import type { AdminEvent, AdminSection, EventCreate, EventUpdate, SectionInput } from "./types"
 
 /** All events incl. drafts (admin only). */
 export function listAdminEvents() {
@@ -23,4 +23,17 @@ export function updateEvent(id: string, payload: EventUpdate) {
   return apiFetch<AdminEvent>(adminEndpoints.event(id), { method: "PATCH", body: JSON.stringify(payload) })
 }
 
-export type { AdminEvent, EventCreate, EventUpdate } from "./types"
+/** All content sections for an event (admin). */
+export function getEventSections(id: string) {
+  return apiFetch<AdminSection[]>(adminEndpoints.eventSections(id))
+}
+
+/** Replace all content sections for an event (admin). */
+export function replaceEventSections(id: string, sections: SectionInput[]) {
+  return apiFetch<AdminSection[]>(adminEndpoints.eventSections(id), {
+    method: "PUT",
+    body: JSON.stringify(sections),
+  })
+}
+
+export type { AdminEvent, AdminSection, EventCreate, EventUpdate, SectionInput } from "./types"

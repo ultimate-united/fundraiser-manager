@@ -5,6 +5,20 @@ export interface ImpactItem {
   description: string
 }
 
+/** Editable per-tab heading/body + show toggle (from event_sections). */
+export interface SectionContent {
+  title: string
+  body: string
+  enabled: boolean
+}
+
+export interface EventTabContent {
+  overview: SectionContent
+  schedule: SectionContent
+  contribution: SectionContent
+  sponsors: SectionContent
+}
+
 export interface Event {
   id: string
   slug: string
@@ -24,6 +38,8 @@ export interface Event {
   schedule: ScheduleItem[]
   contributionTypes: ContributionType[]
   impact?: ImpactItem[]
+  /** Editable tab headings/bodies + enable flags (detail view only). */
+  tabContent?: EventTabContent
   status: 'upcoming' | 'ongoing' | 'completed'
   featured?: boolean
   createdAt: string
