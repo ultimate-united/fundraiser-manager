@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel
 
 EventStatus = str  # 'draft' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
+ReviewStatus = str  # 'draft' | 'pending' | 'approved' | 'rejected' | 'changes_requested'
 SectionKind = str  # 'rich_text' | 'schedule' | 'sponsors' | 'contribution' | 'faq' | 'organizer' | 'custom'
 
 
@@ -29,6 +30,9 @@ class EventBase(BaseModel):
     id: str
     organizer_id: str
     parent_event_id: Optional[str] = None
+    owner_id: Optional[str] = None  # null = org/admin event; set = user activity
+    review_status: ReviewStatus = "approved"
+    review_note: Optional[str] = None
     slug: str
     title: str
     subtitle: Optional[str] = None
@@ -101,3 +105,45 @@ class EventUpdate(BaseModel):
     status: Optional[EventStatus] = None
     featured: Optional[bool] = None
     impact: Optional[List[Any]] = None
+
+
+# --- User activities (owner-scoped; admin-only fields are intentionally absent) ---
+
+# The fields an owner is allowed to set. status / featured / points_reward /
+# review_status / organizer_id are NOT here by design — they are server- or
+# admin-controlled, and the DB column-guard trigger enforces the same boundary.
+class ActivityCreate(BaseModel):
+    slug: str
+    title: str
+    subtitle: Optional[str] = None
+    mission: Optional[str] = None
+    summary: Optional[str] = None
+    banner_image: Optional[str] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    location: Optional[str] = None
+    fundraising_goal: Optional[int] = None  # minor units (cents)
+    participant_goal: Optional[int] = None
+    volunteer_spots: Optional[int] = None
+    impact: List[Any] = []
+
+
+class ActivityUpdate(BaseModel):
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    mission: Optional[str] = None
+    summary: Optional[str] = None
+    banner_image: Optional[str] = None
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+    location: Optional[str] = None
+    fundraising_goal: Optional[int] = None
+    participant_goal: Optional[int] = None
+    volunteer_spots: Optional[int] = None
+    impact: Optional[List[Any]] = None
+
+
+class ReviewAction(BaseModel):
+    """Admin reject / request-changes payload — an optional note to the owner."""
+    note: Optional[str] = None

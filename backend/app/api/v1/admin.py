@@ -4,9 +4,9 @@ Event create/edit lives here, separate from the public read-only events router s
 the admin gate applies to the whole sub-router and paths don't collide with the
 public `/events/{slug}` route.
 """
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.auth import CurrentUser, get_current_user
 from app.db.helpers import single_row
@@ -18,6 +18,7 @@ from app.schemas.events import (
     EventListItem,
     EventSectionOut,
     EventUpdate,
+    ReviewAction,
     SectionIn,
 )
 
@@ -35,15 +36,17 @@ def get_admin_user(user: CurrentUser = Depends(get_current_user)) -> CurrentUser
 
 
 @router.get("/events", response_model=List[EventListItem])
-def admin_list_events(_admin: CurrentUser = Depends(get_admin_user)):
-    """All events incl. drafts (service client bypasses the public-read RLS)."""
+def admin_list_events(
+    _admin: CurrentUser = Depends(get_admin_user),
+    review_status: Optional[str] = Query(default=None, description="Filter by review_status, e.g. 'pending'"),
+):
+    """All events incl. drafts (service client bypasses the public-read RLS).
+    Pass review_status=pending to drive the admin review queue."""
     db = get_service_client()
-    res = (
-        db.table("v_event_public")
-        .select("*")
-        .order("starts_at", desc=True)
-        .execute()
-    )
+    q = db.table("v_event_public").select("*")
+    if review_status:
+        q = q.eq("review_status", review_status)
+    res = q.order("starts_at", desc=True).execute()
     return res.data or []
 
 
@@ -128,3 +131,40 @@ def admin_replace_sections(
     ]
     res = db.table("event_sections").insert(rows).execute()
     return res.data or []
+
+
+# --- Review moderation for user-submitted activities ---------------------------
+
+def _set_review(event_id: str, review_status: str, note: Optional[str]) -> dict:
+    """Set an event's review_status (+ optional note) via the service role and
+    return the updated row. 404 if the event doesn't exist."""
+    db = get_service_client()
+    res = (
+        db.table("events")
+        .update({"review_status": review_status, "review_note": note})
+        .eq("id", event_id)
+        .execute()
+    )
+    return single_row(res, not_found="Event not found")
+
+
+@router.post("/events/{event_id}/approve", response_model=EventBase)
+def admin_approve_event(event_id: str, _admin: CurrentUser = Depends(get_admin_user)):
+    """Approve a submitted activity — it becomes publicly visible."""
+    return _set_review(event_id, "approved", None)
+
+
+@router.post("/events/{event_id}/reject", response_model=EventBase)
+def admin_reject_event(
+    event_id: str, payload: ReviewAction, _admin: CurrentUser = Depends(get_admin_user)
+):
+    """Reject a submitted activity, with an optional note for the owner."""
+    return _set_review(event_id, "rejected", payload.note)
+
+
+@router.post("/events/{event_id}/request-changes", response_model=EventBase)
+def admin_request_changes(
+    event_id: str, payload: ReviewAction, _admin: CurrentUser = Depends(get_admin_user)
+):
+    """Send a submitted activity back to the owner for edits (changes_requested)."""
+    return _set_review(event_id, "changes_requested", payload.note)

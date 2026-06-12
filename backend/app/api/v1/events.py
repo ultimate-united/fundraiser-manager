@@ -19,7 +19,9 @@ def list_events(
 ):
     """Public events feed (reads the v_event_public view with computed totals)."""
     db = get_service_client()
-    q = db.table("v_event_public").select("*")
+    # Service client bypasses RLS, so the approval gate (org events OR approved
+    # owned activities) is applied explicitly here too.
+    q = db.table("v_event_public").select("*").or_("owner_id.is.null,review_status.eq.approved")
     if status:
         q = q.eq("status", status)
     else:
@@ -37,7 +39,14 @@ def list_events(
 def get_event(slug: str):
     """Full event detail page: core fields + computed totals + dynamic sections."""
     db = get_service_client()
-    res = db.table("v_event_public").select("*").eq("slug", slug).limit(1).execute()
+    res = (
+        db.table("v_event_public")
+        .select("*")
+        .eq("slug", slug)
+        .or_("owner_id.is.null,review_status.eq.approved")
+        .limit(1)
+        .execute()
+    )
     event = single_row(res, not_found="Event not found")
 
     sections_res = (
