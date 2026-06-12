@@ -1,6 +1,16 @@
-import { Heart, Clock, Lightbulb, Users, Gift, Sparkles, type LucideIcon } from "lucide-react"
+import {
+  Heart,
+  Clock,
+  Lightbulb,
+  Users,
+  Gift,
+  Sparkles,
+  Building,
+  GraduationCap,
+  type LucideIcon,
+} from "lucide-react"
 
-/** Selectable icons for "How to Contribute" cards (key stored in section content). */
+/** Selectable icons for contribution + overview cards (key stored in section content). */
 export const CONTRIBUTION_ICONS: Record<string, LucideIcon> = {
   heart: Heart,
   clock: Clock,
@@ -8,6 +18,8 @@ export const CONTRIBUTION_ICONS: Record<string, LucideIcon> = {
   users: Users,
   gift: Gift,
   sparkles: Sparkles,
+  building: Building,
+  education: GraduationCap,
 }
 
 export const CONTRIBUTION_ICON_OPTIONS = [
@@ -17,4 +29,6 @@ export const CONTRIBUTION_ICON_OPTIONS = [
   { value: "users", label: "People" },
   { value: "gift", label: "Gift" },
   { value: "sparkles", label: "Sparkles" },
+  { value: "building", label: "Building" },
+  { value: "education", label: "Education" },
 ] as const

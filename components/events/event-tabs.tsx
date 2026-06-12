@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, Heart, Users, Building, CheckCircle2 } from "lucide-react"
+import { Clock, Heart, Building, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CONTRIBUTION_ICONS } from "@/components/events/contribution-icons"
 import type { Event } from "@/lib/types"
@@ -62,34 +62,23 @@ function OverviewTab({ event }: { event: Event }) {
   const tc = event.tabContent?.overview
   return (
     <div className="prose prose-lg max-w-none">
-      <h2 className="font-serif text-2xl font-semibold text-foreground">
-        {tc?.title || "About This Event"}
-      </h2>
-      <p className="mt-4 text-muted-foreground leading-relaxed">{tc?.body || event.description}</p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title}</h2>
+      <p className="mt-4 text-muted-foreground leading-relaxed">{tc?.body}</p>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <Users className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-foreground">Who Should Join</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Anyone passionate about making a difference in our community. Families, individuals, and corporate teams are all welcome.
-          </p>
+      {event.overviewCards.length > 0 && (
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {event.overviewCards.map((card, i) => {
+            const Icon = CONTRIBUTION_ICONS[card.icon] ?? Heart
+            return (
+              <div key={i} className="rounded-xl border border-border bg-card p-6">
+                <Icon className="h-8 w-8 text-primary" />
+                <h3 className="mt-4 font-semibold text-foreground">{card.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{card.body}</p>
+              </div>
+            )
+          })}
         </div>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <Heart className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-foreground">What to Expect</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            A day filled with meaningful activities, community bonding, and the joy of giving back to those in need.
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <Building className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-foreground">Impact</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            100% of funds raised go directly to supporting underprivileged children and families in Hong Kong.
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -98,10 +87,8 @@ function ScheduleTab({ event }: { event: Event }) {
   const tc = event.tabContent?.schedule
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">
-        {tc?.title || "Event Schedule"}
-      </h2>
-      <p className="mt-2 text-muted-foreground">{tc?.body || "Here's what to expect throughout the day"}</p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title}</h2>
+      <p className="mt-2 text-muted-foreground">{tc?.body}</p>
 
       <div className="mt-8 space-y-4">
         {event.schedule.map((item, index) => (
@@ -140,12 +127,8 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">
-        {tc?.title || "How You Can Contribute"}
-      </h2>
-      <p className="mt-2 text-muted-foreground">
-        {tc?.body || "There are many ways to support this event and make a difference"}
-      </p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title}</h2>
+      <p className="mt-2 text-muted-foreground">{tc?.body}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         {event.contributionTypes.map((contribution, i) => {
@@ -214,10 +197,8 @@ function SponsorsTab({ event }: { event: Event }) {
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title || "Our Sponsors"}</h2>
-      <p className="mt-2 text-muted-foreground">
-        {tc?.body || "We are grateful to the organizations that make this event possible"}
-      </p>
+      <h2 className="font-serif text-2xl font-semibold text-foreground">{tc?.title}</h2>
+      <p className="mt-2 text-muted-foreground">{tc?.body}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {sortedSponsors.map((sponsor) => (

@@ -12,6 +12,13 @@ export interface SectionContent {
   enabled: boolean
 }
 
+/** An editable info card on the Overview tab. */
+export interface OverviewCard {
+  icon: string
+  title: string
+  body: string
+}
+
 export interface EventTabContent {
   overview: SectionContent
   schedule: SectionContent
@@ -37,6 +44,7 @@ export interface Event {
   sponsors: Sponsor[]
   schedule: ScheduleItem[]
   contributionTypes: ContributionType[]
+  overviewCards: OverviewCard[]
   impact?: ImpactItem[]
   /** Editable tab headings/bodies + enable flags (detail view only). */
   tabContent?: EventTabContent

@@ -1,6 +1,13 @@
 import { getEvent, getEvents } from "@/lib/api/events"
 import type { EventDetail, EventListItem } from "@/lib/api/events/types"
-import type { ContributionType, Event, ScheduleItem, SectionContent, Sponsor } from "@/lib/types"
+import type {
+  ContributionType,
+  Event,
+  OverviewCard,
+  ScheduleItem,
+  SectionContent,
+  Sponsor,
+} from "@/lib/types"
 
 /**
  * Events view-model layer: maps the FastAPI events DTOs (snake_case, money in
@@ -17,7 +24,9 @@ function mapStatus(status: string): Event["status"] {
 }
 
 /** Shared core fields present on both list items and detail responses. */
-function toBaseView(dto: EventListItem): Omit<Event, "sponsors" | "schedule" | "contributionTypes"> {
+function toBaseView(
+  dto: EventListItem,
+): Omit<Event, "sponsors" | "schedule" | "contributionTypes" | "overviewCards"> {
   return {
     id: dto.id,
     slug: dto.slug,
@@ -41,18 +50,13 @@ function toBaseView(dto: EventListItem): Omit<Event, "sponsors" | "schedule" | "
   }
 }
 
-// Defaults that preserve the original tab copy when a section has no stored value.
+// Fallback tab headings only (content/body comes from the DB; bodies are seeded
+// at create time + backfilled, so these titles are a defensive label fallback).
 const SECTION_DEFAULTS = {
-  overview: { title: "About This Event", body: "" },
-  schedule: { title: "Event Schedule", body: "Here's what to expect throughout the day" },
-  contribution: {
-    title: "How You Can Contribute",
-    body: "There are many ways to support this event and make a difference",
-  },
-  sponsors: {
-    title: "Our Sponsors",
-    body: "We are grateful to the organizations that make this event possible",
-  },
+  overview: { title: "About This Event" },
+  schedule: { title: "Event Schedule" },
+  contribution: { title: "How You Can Contribute" },
+  sponsors: { title: "Our Sponsors" },
 } as const
 
 /** Items for a section — tolerant of legacy array content and the { body, items } shape. */
@@ -69,7 +73,7 @@ function sectionItems<T>(detail: EventDetail, kind: string): T[] {
 function tabSection(
   detail: EventDetail,
   kind: string,
-  defaults: { title: string; body: string },
+  defaults: { title: string },
   alwaysEnabled = false,
 ): SectionContent {
   const section = detail.sections.find((s) => s.kind === kind)
@@ -80,14 +84,14 @@ function tabSection(
       : ""
   return {
     title: section?.title || defaults.title,
-    body: storedBody || defaults.body,
+    body: storedBody,
     enabled: alwaysEnabled ? true : section ? (section.enabled ?? true) : false,
   }
 }
 
 /** List view: no sections available from the feed, so contribution surfaces are empty. */
 function toListView(dto: EventListItem): Event {
-  return { ...toBaseView(dto), sponsors: [], schedule: [], contributionTypes: [] }
+  return { ...toBaseView(dto), sponsors: [], schedule: [], contributionTypes: [], overviewCards: [] }
 }
 
 /** Detail view: hydrate sponsors / schedule / contribution tabs from JSONB sections. */
@@ -126,6 +130,16 @@ function toDetailView(detail: EventDetail): Event {
     cta: it.cta ?? (it.type === "donation" ? "donate" : "signup"),
   }))
 
+  const overviewCards: OverviewCard[] = sectionItems<{
+    icon?: string
+    title?: string
+    body?: string
+  }>(detail, "rich_text").map((c) => ({
+    icon: c.icon ?? "heart",
+    title: c.title ?? "",
+    body: c.body ?? "",
+  }))
+
   const tabContent = {
     overview: tabSection(detail, "rich_text", SECTION_DEFAULTS.overview, true),
     schedule: tabSection(detail, "schedule", SECTION_DEFAULTS.schedule),
@@ -135,7 +149,7 @@ function toDetailView(detail: EventDetail): Event {
   // Overview body falls back to the event summary when no rich_text section exists.
   if (!tabContent.overview.body) tabContent.overview.body = base.description ?? ""
 
-  return { ...base, sponsors, schedule, contributionTypes, tabContent }
+  return { ...base, sponsors, schedule, contributionTypes, overviewCards, tabContent }
 }
 
 /** Upcoming events for the landing grid (matches the page's "Upcoming Events" heading). */

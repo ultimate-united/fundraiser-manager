@@ -17,12 +17,13 @@ import { CONTRIBUTION_ICON_OPTIONS } from "@/components/events/contribution-icon
 import { saveSections, type SectionsFormState } from "@/app/admin/events/[id]/sections-actions"
 import type { AdminSection, SectionInput } from "@/lib/api/admin/types"
 
+type OverviewCardRow = { icon: string; title: string; body: string }
 type ScheduleRow = { time: string; title: string; description: string; location: string }
 type ContribRow = { icon: string; title: string; body: string; cta: "donate" | "signup" }
 type SponsorRow = { name: string; tier: "platinum" | "gold" | "silver" | "bronze" }
 
 interface EditorState {
-  overview: { title: string; body: string }
+  overview: { title: string; body: string; items: OverviewCardRow[] }
   schedule: { enabled: boolean; title: string; body: string; items: ScheduleRow[] }
   contribution: { enabled: boolean; title: string; body: string; items: ContribRow[] }
   sponsors: { enabled: boolean; title: string; body: string; items: SponsorRow[] }
@@ -56,7 +57,14 @@ function initialState(sections: AdminSection[]): EditorState {
   const sponsors = find(sections, "sponsors")
 
   return {
-    overview: { title: overview?.title ?? "About This Event", body: bodyOf(overview) },
+    overview: {
+      title: overview?.title ?? "About This Event",
+      body: bodyOf(overview),
+      items: itemsOf(overview).map((r) => {
+        const it = r as Partial<OverviewCardRow>
+        return { icon: it.icon ?? "heart", title: it.title ?? "", body: it.body ?? "" }
+      }),
+    },
     schedule: {
       enabled: schedule?.enabled ?? false,
       title: schedule?.title ?? "Event Schedule",
@@ -99,7 +107,7 @@ function initialState(sections: AdminSection[]): EditorState {
 
 function buildPayload(s: EditorState): SectionInput[] {
   return [
-    { kind: "rich_text", title: s.overview.title, position: 0, content: { body: s.overview.body, items: [] }, enabled: true },
+    { kind: "rich_text", title: s.overview.title, position: 0, content: { body: s.overview.body, items: s.overview.items }, enabled: true },
     { kind: "schedule", title: s.schedule.title, position: 1, content: { body: s.schedule.body, items: s.schedule.items }, enabled: s.schedule.enabled },
     { kind: "contribution", title: s.contribution.title, position: 2, content: { body: s.contribution.body, items: s.contribution.items }, enabled: s.contribution.enabled },
     { kind: "sponsors", title: s.sponsors.title, position: 3, content: { body: s.sponsors.body, items: s.sponsors.items }, enabled: s.sponsors.enabled },
@@ -116,7 +124,8 @@ export function EventSectionsEditor({
   const [state, setState] = useState<EditorState>(() => initialState(initialSections))
   const [result, action, pending] = useActionState<SectionsFormState, FormData>(saveSections, null)
 
-  // Typed-ish generic updaters for the three item arrays.
+  // Typed-ish generic updaters for the item arrays.
+  const setOverviewCards = (items: OverviewCardRow[]) => setState((s) => ({ ...s, overview: { ...s.overview, items } }))
   const setSchedule = (items: ScheduleRow[]) => setState((s) => ({ ...s, schedule: { ...s.schedule, items } }))
   const setContrib = (items: ContribRow[]) => setState((s) => ({ ...s, contribution: { ...s.contribution, items } }))
   const setSponsors = (items: SponsorRow[]) => setState((s) => ({ ...s, sponsors: { ...s.sponsors, items } }))
@@ -133,10 +142,25 @@ export function EventSectionsEditor({
             <input type="hidden" name="payload" value={JSON.stringify(buildPayload(state))} />
 
             {/* Overview (always shown) */}
-            <section className="space-y-3">
+            <section className="space-y-3 rounded-lg border p-4">
               <h3 className="font-semibold text-foreground">Overview <span className="text-xs font-normal text-muted-foreground">· always shown</span></h3>
               <Field label="Tab heading" value={state.overview.title} onChange={(v) => setState((s) => ({ ...s, overview: { ...s.overview, title: v } }))} />
               <BodyField value={state.overview.body} onChange={(v) => setState((s) => ({ ...s, overview: { ...s.overview, body: v } }))} />
+              <div className="space-y-3">
+                <Label>Info cards</Label>
+                {state.overview.items.map((row, i) => (
+                  <ItemRow key={i} onRemove={() => setOverviewCards(state.overview.items.filter((_, idx) => idx !== i))}>
+                    <div className="space-y-2">
+                      <select className={SELECT_CLASS} value={row.icon} onChange={(e) => setOverviewCards(state.overview.items.map((r, idx) => (idx === i ? { ...r, icon: e.target.value } : r)))}>
+                        {CONTRIBUTION_ICON_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                      </select>
+                      <Input placeholder="Card title (e.g. Who Should Join)" value={row.title} onChange={(e) => setOverviewCards(state.overview.items.map((r, idx) => (idx === i ? { ...r, title: e.target.value } : r)))} />
+                      <Textarea rows={2} placeholder="Card body" value={row.body} onChange={(e) => setOverviewCards(state.overview.items.map((r, idx) => (idx === i ? { ...r, body: e.target.value } : r)))} />
+                    </div>
+                  </ItemRow>
+                ))}
+                <AddButton label="Add overview card" onClick={() => setOverviewCards([...state.overview.items, { icon: "users", title: "", body: "" }])} />
+              </div>
             </section>
 
             {/* Schedule */}

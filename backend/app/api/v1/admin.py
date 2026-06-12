@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import CurrentUser, get_current_user
 from app.db.helpers import single_row
 from app.db.supabase import get_service_client
+from app.services.event_defaults import DEFAULT_SECTIONS
 from app.schemas.events import (
     EventBase,
     EventCreate,
@@ -64,7 +65,17 @@ def admin_create_event(payload: EventCreate, _admin: CurrentUser = Depends(get_a
         res = db.table("events").insert(data).execute()
     except Exception as exc:  # noqa: BLE001 — surface unique-slug etc. as 400
         raise HTTPException(status_code=400, detail=str(getattr(exc, "message", exc)))
-    return single_row(res, not_found="Failed to create event", status_code=500)
+    created = single_row(res, not_found="Failed to create event", status_code=500)
+
+    # Seed the default content sections as an editable guideline (best-effort).
+    try:
+        db.table("event_sections").insert(
+            [{"event_id": created["id"], **section} for section in DEFAULT_SECTIONS]
+        ).execute()
+    except Exception:
+        pass
+
+    return created
 
 
 @router.patch("/events/{event_id}", response_model=EventBase)
