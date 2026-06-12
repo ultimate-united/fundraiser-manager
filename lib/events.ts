@@ -111,7 +111,20 @@ function toDetailView(detail: EventDetail): Event {
     (item, i) => ({ id: `sch-${i}`, ...item }),
   )
 
-  const contributionTypes = sectionItems<ContributionType>(detail, "contribution")
+  const legacyIcon: Record<string, string> = { donation: "heart", time: "clock", skills: "lightbulb" }
+  const contributionTypes: ContributionType[] = sectionItems<{
+    icon?: string
+    type?: string
+    title?: string
+    body?: string
+    description?: string
+    cta?: "donate" | "signup"
+  }>(detail, "contribution").map((it) => ({
+    icon: it.icon ?? (it.type ? legacyIcon[it.type] : undefined) ?? "heart",
+    title: it.title ?? "",
+    body: it.body ?? it.description ?? "",
+    cta: it.cta ?? (it.type === "donation" ? "donate" : "signup"),
+  }))
 
   const tabContent = {
     overview: tabSection(detail, "rich_text", SECTION_DEFAULTS.overview, true),

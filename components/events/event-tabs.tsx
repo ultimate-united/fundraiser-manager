@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, Heart, Lightbulb, Users, Building, CheckCircle2 } from "lucide-react"
+import { Clock, Heart, Users, Building, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { CONTRIBUTION_ICONS } from "@/components/events/contribution-icons"
 import type { Event } from "@/lib/types"
 
 interface EventTabsProps {
@@ -136,11 +137,6 @@ function ScheduleTab({ event }: { event: Event }) {
 
 function ContributeTab({ event, isRegistered = false }: { event: Event; isRegistered?: boolean }) {
   const tc = event.tabContent?.contribution
-  const icons = {
-    donation: Heart,
-    time: Clock,
-    skills: Lightbulb,
-  }
 
   return (
     <div>
@@ -152,11 +148,12 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {event.contributionTypes.map((contribution) => {
-          const Icon = icons[contribution.type]
+        {event.contributionTypes.map((contribution, i) => {
+          const Icon = CONTRIBUTION_ICONS[contribution.icon] ?? Heart
+          const isSignup = contribution.cta === "signup"
           return (
             <div
-              key={contribution.type}
+              key={i}
               className="rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-md"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -164,9 +161,9 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
               </div>
               <h3 className="mt-4 font-semibold text-foreground">{contribution.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {contribution.description}
+                {contribution.body}
               </p>
-              {contribution.type !== "donation" && isRegistered ? (
+              {isSignup && isRegistered ? (
                 <Button className="mt-4 w-full" variant="outline" disabled>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   You&apos;re registered
@@ -175,12 +172,10 @@ function ContributeTab({ event, isRegistered = false }: { event: Event; isRegist
                 <Button className="mt-4 w-full" variant="outline" asChild>
                   <Link
                     href={
-                      contribution.type === "donation"
-                        ? `/donate?event=${event.slug}`
-                        : `/events/${event.slug}/register`
+                      isSignup ? `/events/${event.slug}/register` : `/donate?event=${event.slug}`
                     }
                   >
-                    {contribution.type === "donation" ? "Donate Now" : "Sign Up"}
+                    {isSignup ? "Sign Up" : "Donate Now"}
                   </Link>
                 </Button>
               )}

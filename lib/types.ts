@@ -64,10 +64,10 @@ export interface ScheduleItem {
 }
 
 export interface ContributionType {
-  type: 'donation' | 'time' | 'skills'
+  icon: string // key into CONTRIBUTION_ICONS
   title: string
-  description: string
-  icon?: string
+  body: string
+  cta: 'donate' | 'signup'
 }
 
 // User types
