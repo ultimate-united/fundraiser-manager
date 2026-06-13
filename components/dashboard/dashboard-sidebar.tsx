@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Trophy, 
-  Heart, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Trophy,
+  Heart,
   Settings,
-  Star
+  Star,
+  Megaphone
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -43,6 +44,7 @@ const TIER_CONFIG = {
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/events", label: "My Events", icon: Calendar },
+  { href: "/dashboard/activities", label: "My Activities", icon: Megaphone },
   { href: "/dashboard/rewards", label: "Rewards", icon: Trophy },
   { href: "/dashboard/donations", label: "Donations", icon: Heart },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -96,7 +98,8 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           {/* Navigation */}
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href
+              const isActive =
+                item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href)
               return (
                 <Link
                   key={item.href}

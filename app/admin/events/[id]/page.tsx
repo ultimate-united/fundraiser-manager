@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { EventForm } from "@/components/admin/event-form"
+import { saveEvent } from "@/app/admin/events/actions"
 import { getAdminEvent, getEventSections } from "@/lib/api/admin"
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +14,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   return (
     <div className="max-w-3xl">
       <h1 className="mb-6 font-serif text-3xl font-bold text-foreground">Edit event</h1>
-      <EventForm event={event} initialSections={sections} />
+      <EventForm event={event} initialSections={sections} action={saveEvent} />
     </div>
   )
 }

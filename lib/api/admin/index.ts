@@ -1,11 +1,41 @@
 import { apiFetch } from "@/lib/api/client"
 
 import { adminEndpoints } from "./endpoints"
-import type { AdminEvent, AdminSection, EventCreate, EventUpdate, SectionInput } from "./types"
+import type {
+  AdminEvent,
+  AdminEventListItem,
+  AdminSection,
+  EventCreate,
+  EventUpdate,
+  ReviewStatus,
+  SectionInput,
+} from "./types"
 
-/** All events incl. drafts (admin only). */
-export function listAdminEvents() {
-  return apiFetch<AdminEvent[]>(adminEndpoints.events)
+/** All events incl. drafts (admin only). Pass reviewStatus to drive the queue. */
+export function listAdminEvents(reviewStatus?: ReviewStatus) {
+  const qs = reviewStatus ? `?review_status=${reviewStatus}` : ""
+  return apiFetch<AdminEventListItem[]>(`${adminEndpoints.events}${qs}`)
+}
+
+/** Approve a submitted user activity → it becomes public (admin only). */
+export function approveEvent(id: string) {
+  return apiFetch<AdminEvent>(adminEndpoints.approve(id), { method: "POST" })
+}
+
+/** Reject a submitted activity with an optional note (admin only). */
+export function rejectEvent(id: string, note?: string) {
+  return apiFetch<AdminEvent>(adminEndpoints.reject(id), {
+    method: "POST",
+    body: JSON.stringify({ note: note ?? null }),
+  })
+}
+
+/** Send a submitted activity back to its owner for edits (admin only). */
+export function requestChanges(id: string, note?: string) {
+  return apiFetch<AdminEvent>(adminEndpoints.requestChanges(id), {
+    method: "POST",
+    body: JSON.stringify({ note: note ?? null }),
+  })
 }
 
 /** A single event by id, incl. drafts (admin only). */
@@ -36,4 +66,12 @@ export function replaceEventSections(id: string, sections: SectionInput[]) {
   })
 }
 
-export type { AdminEvent, AdminSection, EventCreate, EventUpdate, SectionInput } from "./types"
+export type {
+  AdminEvent,
+  AdminEventListItem,
+  AdminSection,
+  EventCreate,
+  EventUpdate,
+  ReviewStatus,
+  SectionInput,
+} from "./types"

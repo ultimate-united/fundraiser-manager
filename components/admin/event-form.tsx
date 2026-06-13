@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Loader2 } from "lucide-react"
-import { saveEvent, type EventFormState } from "@/app/admin/events/actions"
+import type { EventFormState } from "@/app/admin/events/actions"
 import { EventSectionsEditor } from "@/components/admin/event-sections-editor"
 import type { AdminEvent, AdminSection } from "@/lib/api/admin/types"
 
@@ -17,20 +17,33 @@ const STATUSES = ["draft", "upcoming", "ongoing", "completed", "cancelled"] as c
 /** Trim an ISO timestamp to the `YYYY-MM-DDTHH:mm` a datetime-local input wants. */
 const toLocalInput = (iso: string | null | undefined) => (iso ? iso.slice(0, 16) : "")
 
+/**
+ * Shared event editor for admins and activity owners. `mode="owner"` hides the
+ * admin-only fields (status / featured / points) which the backend + DB guard
+ * also refuse to accept from a non-admin. The server `action` is injected so the
+ * same form drives both the admin events resource and the user activities resource.
+ */
 export function EventForm({
   event,
   initialSections,
+  action: formAction,
+  mode = "admin",
+  submitLabel,
 }: {
   event?: AdminEvent
   initialSections: AdminSection[]
+  action: (prev: EventFormState, formData: FormData) => Promise<EventFormState>
+  mode?: "admin" | "owner"
+  submitLabel?: string
 }) {
-  const [state, action, pending] = useActionState<EventFormState, FormData>(saveEvent, null)
+  const [state, action, pending] = useActionState<EventFormState, FormData>(formAction, null)
   const [featured, setFeatured] = useState(event?.featured ?? false)
+  const isAdmin = mode === "admin"
 
   return (
     <form action={action} className="space-y-6 rounded-xl border bg-card p-6">
       {event && <input type="hidden" name="id" value={event.id} />}
-      <input type="hidden" name="featured" value={featured ? "true" : "false"} />
+      {isAdmin && <input type="hidden" name="featured" value={featured ? "true" : "false"} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -93,40 +106,44 @@ export function EventForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="points_reward">Points reward</Label>
-          <Input id="points_reward" name="points_reward" type="number" min={0} defaultValue={event?.points_reward ?? 0} />
+      {isAdmin && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="points_reward">Points reward</Label>
+            <Input id="points_reward" name="points_reward" type="number" min={0} defaultValue={event?.points_reward ?? 0} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={event?.status ?? "draft"}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm capitalize"
+            >
+              {STATUSES.map((s) => (
+                <option key={s} value={s} className="capitalize">
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={event?.status ?? "draft"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm capitalize"
-          >
-            {STATUSES.map((s) => (
-              <option key={s} value={s} className="capitalize">
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="banner_image">Banner image URL</Label>
         <Input id="banner_image" name="banner_image" defaultValue={event?.banner_image ?? ""} placeholder="(uploads come later)" />
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border p-4">
-        <div>
-          <Label htmlFor="featured" className="text-base font-medium">Featured</Label>
-          <p className="text-sm text-muted-foreground">Highlight this event on the landing grid.</p>
+      {isAdmin && (
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div>
+            <Label htmlFor="featured" className="text-base font-medium">Featured</Label>
+            <p className="text-sm text-muted-foreground">Highlight this event on the landing grid.</p>
+          </div>
+          <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
         </div>
-        <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
-      </div>
+      )}
 
       {/* Editable content tabs — emits a hidden `sections_payload` saved with this form. */}
       <EventSectionsEditor initialSections={initialSections} />
@@ -142,6 +159,8 @@ export function EventForm({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving…
             </>
+          ) : submitLabel ? (
+            submitLabel
           ) : event ? (
             "Save changes"
           ) : (
@@ -149,7 +168,7 @@ export function EventForm({
           )}
         </Button>
         <Button asChild variant="outline">
-          <Link href="/admin/events">Cancel</Link>
+          <Link href={isAdmin ? "/admin/events" : "/dashboard/activities"}>Cancel</Link>
         </Button>
       </div>
     </form>

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
-import { LayoutDashboard, Calendar } from "lucide-react"
+import { LayoutDashboard, Calendar, ClipboardCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /** Add new admin sections here as they're built. */
@@ -14,6 +14,12 @@ const NAV_ITEMS = [
     label: "Events",
     icon: Calendar,
     match: (p: string) => p.startsWith("/admin/events"),
+  },
+  {
+    href: "/admin/review",
+    label: "Review queue",
+    icon: ClipboardCheck,
+    match: (p: string) => p.startsWith("/admin/review"),
   },
 ]
 

@@ -105,10 +105,14 @@ def update_my_activity(
     event_id: str, payload: ActivityUpdate, user: CurrentUser = Depends(get_current_user)
 ):
     db = get_service_client()
-    _owned_event(db, event_id, user.id)  # 404 if not the owner's
+    event = _owned_event(db, event_id, user.id)  # 404 if not the owner's
     changes = payload.model_dump(exclude_none=True, mode="json")
     if not changes:
         raise HTTPException(status_code=400, detail="No fields to update")
+    # Editing a live (approved) activity sends it back for re-review — content must
+    # not change publicly without an admin re-approving (prevents bait-and-switch).
+    if event["review_status"] == "approved":
+        changes["review_status"] = "pending"
     try:
         res = db.table("events").update(changes).eq("id", event_id).eq("owner_id", user.id).execute()
     except Exception as exc:  # noqa: BLE001
@@ -154,7 +158,10 @@ def replace_my_sections(
 ):
     """Replace ALL content sections for an owned activity (delete + reinsert)."""
     db = get_service_client()
-    _owned_event(db, event_id, user.id)
+    event = _owned_event(db, event_id, user.id)
+    # Sections are public content too — re-review a live activity after a change.
+    if event["review_status"] == "approved":
+        db.table("events").update({"review_status": "pending"}).eq("id", event_id).execute()
     db.table("event_sections").delete().eq("event_id", event_id).execute()
     if not sections:
         return []

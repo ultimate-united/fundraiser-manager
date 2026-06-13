@@ -3,10 +3,15 @@ import type { EventStatus } from "@/lib/api/events/types"
 
 type ImpactItem = { amount: number; title: string; description: string }
 
+export type ReviewStatus = "draft" | "pending" | "approved" | "rejected" | "changes_requested"
+
 /** Full event row (no computed aggregates — mirrors EventBase). */
 export interface AdminEvent {
   id: string
   organizer_id: string
+  owner_id: string | null // null = org/admin event; set = user activity
+  review_status: ReviewStatus
+  review_note: string | null
   slug: string
   title: string
   subtitle: string | null
@@ -23,6 +28,13 @@ export interface AdminEvent {
   status: EventStatus
   featured: boolean
   impact: ImpactItem[]
+}
+
+/** List row from v_event_public — AdminEvent plus computed aggregates. */
+export interface AdminEventListItem extends AdminEvent {
+  amount_raised: number
+  participant_count: number
+  spots_left: number | null
 }
 
 export interface EventCreate {

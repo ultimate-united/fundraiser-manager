@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation"
 
 import { createEvent, replaceEventSections, updateEvent } from "@/lib/api/admin"
-import type { EventCreate, SectionInput } from "@/lib/api/admin/types"
+import type { EventCreate } from "@/lib/api/admin/types"
+import { parseEventForm, mapSaveError } from "@/lib/admin/event-form-parser"
 
 export type EventFormState = { status: "error"; message: string } | null
 
@@ -13,49 +14,15 @@ export type EventFormState = { status: "error"; message: string } | null
  * `sections_payload` field. redirect() lives outside the try.
  */
 export async function saveEvent(_prev: EventFormState, formData: FormData): Promise<EventFormState> {
-  const id = String(formData.get("id") ?? "").trim()
-  const str = (k: string) => String(formData.get(k) ?? "").trim() || null
-  const num = (k: string) => {
-    const v = String(formData.get(k) ?? "").trim()
-    if (!v) return null
-    const n = Number(v)
-    return Number.isFinite(n) ? n : null
-  }
+  const parsed = parseEventForm(formData)
+  if ("error" in parsed) return { status: "error", message: parsed.error }
+  const { id, base, sections, num, bool, str } = parsed
 
-  const title = str("title")
-  const slug = str("slug")
-  if (!title || !slug) {
-    return { status: "error", message: "Title and slug are required." }
-  }
-
-  // Content sections from the embedded editor.
-  let sections: SectionInput[] = []
-  try {
-    const parsed = JSON.parse(String(formData.get("sections_payload") ?? "[]"))
-    if (Array.isArray(parsed)) sections = parsed
-  } catch {
-    sections = []
-  }
-  // The "description" now lives in the Overview body; mirror it to the summary column.
-  const overviewBody = sections.find((s) => s.kind === "rich_text")?.content?.body ?? null
-
-  const goalDollars = num("fundraising_goal")
   const payload: EventCreate = {
-    slug,
-    title,
-    subtitle: str("subtitle"),
-    mission: str("mission"),
-    summary: overviewBody,
-    banner_image: str("banner_image"),
-    starts_at: str("starts_at"),
-    ends_at: str("ends_at"),
-    location: str("location"),
-    fundraising_goal: goalDollars != null ? Math.round(goalDollars * 100) : null,
-    participant_goal: num("participant_goal"),
-    volunteer_spots: num("volunteer_spots"),
+    ...base,
     points_reward: num("points_reward") ?? 0,
     status: (str("status") as EventCreate["status"]) ?? "draft",
-    featured: formData.get("featured") === "true",
+    featured: bool("featured"),
   }
 
   let eventId = id
@@ -67,13 +34,12 @@ export async function saveEvent(_prev: EventFormState, formData: FormData): Prom
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : ""
-    if (/duplicate|unique|already exists/i.test(msg)) {
-      return { status: "error", message: "That slug is already taken — pick another." }
+    return {
+      status: "error",
+      message: mapSaveError(msg) ?? "Couldn't save the event. Please check the fields and try again.",
     }
-    return { status: "error", message: "Couldn't save the event. Please check the fields and try again." }
   }
 
-  // Save content sections (best-effort — the event itself is already saved).
   if (eventId && sections.length > 0) {
     try {
       await replaceEventSections(eventId, sections)
